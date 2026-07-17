@@ -13,7 +13,7 @@ const gameServer = new Server({
 });
 
 // Register rooms
-gameServer.define('world', WorldRoom);
+gameServer.define('zone', WorldRoom);
 
 // Colyseus monitor panel (dev only)
 app.use('/colyseus', monitor());

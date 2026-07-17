@@ -7,9 +7,13 @@ import { mapManager } from '../maps/MapManager';
 const VALID_DIRECTIONS = new Set<Direction>(['up', 'down', 'left', 'right']);
 
 export class WorldRoom extends Room<WorldState> {
-  private mapCollision = mapManager.loadMap('pallet-town');
+  private mapCollision!: ReturnType<typeof mapManager.loadMap>;
+  private mapId!: string;
 
-  onCreate() {
+  onCreate(options: { mapId: string }) {
+    this.mapId = options.mapId || 'pallet-town';
+    this.mapCollision = mapManager.loadMap(this.mapId);
+
     this.setState(new WorldState());
     this.setSimulationInterval(() => this.update(), 1000 / 60);
 
@@ -30,7 +34,7 @@ export class WorldRoom extends Room<WorldState> {
       }
     });
 
-    console.log('🌍 WorldRoom created');
+    console.log(`🌍 Zone created: ${this.mapId}`);
   }
 
   onJoin(client: Client) {
