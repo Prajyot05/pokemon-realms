@@ -69,6 +69,10 @@ class NetworkManager {
     this.room?.send(MessageType.MOVE, { direction });
   }
 
+  sendStop() {
+    this.room?.send('STOP');
+  }
+
   getSessionId(): string | null {
     return this.room?.sessionId ?? null;
   }

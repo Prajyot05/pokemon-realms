@@ -5,6 +5,7 @@ export class PlayerSchema extends Schema {
   @type('number') x: number = 400;
   @type('number') y: number = 300;
   @type('string') direction: string = 'down';
+  @type('boolean') isMoving: boolean = false;
 }
 
 export class WorldState extends Schema {
