@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { initGame, destroyGame } from './game/PhaserGame';
 import { HUD } from './ui/HUD';
+import { DialogBox } from './ui/DialogBox';
 
 export function App() {
   const initialized = useRef(false);
@@ -23,6 +24,7 @@ export function App() {
       {/* React UI floats on top */}
       <div id="ui-overlay">
         <HUD />
+        <DialogBox />
       </div>
     </>
   );

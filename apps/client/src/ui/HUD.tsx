@@ -3,7 +3,7 @@ import { useGameStore } from '../stores/useGameStore';
 export function HUD() {
   const connected = useGameStore((s) => s.connected);
   const playerId = useGameStore((s) => s.playerId);
-  const players = useGameStore((s) => s.players);
+  const playerCount = useGameStore((s) => s.playerCount);
 
   return (
     <div
@@ -28,7 +28,7 @@ export function HUD() {
       {playerId && (
         <div style={{ opacity: 0.7 }}>ID: {playerId.slice(0, 8)}...</div>
       )}
-      <div>Players online: {players.size}</div>
+      <div>Players online: {playerCount}</div>
       <div style={{ marginTop: 6, opacity: 0.5, fontSize: 11 }}>
         Arrow keys to move
       </div>

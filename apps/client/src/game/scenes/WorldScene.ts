@@ -1,10 +1,12 @@
 import Phaser from 'phaser';
 import { networkManager } from '../network/NetworkManager';
 import { useGameStore } from '../../stores/useGameStore';
+import { MOVE_SPEED, isValidDirection } from '@pokemon-realms/shared';
 import type { Direction } from '@pokemon-realms/shared';
 
 export class WorldScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+  private interactKey!: Phaser.Input.Keyboard.Key;
   private playerSprites: Map<string, Phaser.GameObjects.Sprite> = new Map();
   private currentDirection: Direction | null = null;
 
@@ -50,6 +52,7 @@ export class WorldScene extends Phaser.Scene {
 
     // 4. Set up Input
     this.cursors = this.input.keyboard!.createCursorKeys();
+    this.interactKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
     // 5. Connect to Server
     networkManager.connect().catch((err) => {
@@ -58,17 +61,17 @@ export class WorldScene extends Phaser.Scene {
   }
 
   update() {
-    // ── Send input to server ──
+    // ── Input Handling (Local Player Only) ──
     let newDirection: Direction | null = null;
-    
-    if (this.cursors.up.isDown) {
-      newDirection = 'up';
-    } else if (this.cursors.down.isDown) {
-      newDirection = 'down';
-    } else if (this.cursors.left.isDown) {
-      newDirection = 'left';
-    } else if (this.cursors.right.isDown) {
-      newDirection = 'right';
+    if (this.cursors.left.isDown) newDirection = 'left';
+    else if (this.cursors.right.isDown) newDirection = 'right';
+    else if (this.cursors.up.isDown) newDirection = 'up';
+    else if (this.cursors.down.isDown) newDirection = 'down';
+
+    // Check if dialog is active, block movement if so
+    const { activeDialog } = useGameStore.getState();
+    if (activeDialog) {
+      newDirection = null;
     }
 
     if (newDirection !== this.currentDirection) {
@@ -80,20 +83,25 @@ export class WorldScene extends Phaser.Scene {
       }
     }
 
-    // ── Render all players from Zustand store ──
-    const { players, playerId } = useGameStore.getState();
+    // ── Render all players directly from Colyseus state ──
+    const { playerId } = useGameStore.getState();
+    const room = networkManager.getRoom();
+    const serverPlayers = room?.state.players;
+
+    if (!serverPlayers) return;
 
     // Remove sprites for players that left
     for (const [id, sprite] of this.playerSprites) {
-      if (!players.has(id)) {
+      if (!serverPlayers.has(id)) {
         sprite.destroy();
         this.playerSprites.delete(id);
       }
     }
 
     // Create or update sprites for current players
-    for (const [id, state] of players) {
+    serverPlayers.forEach((state, id) => {
       let sprite = this.playerSprites.get(id);
+      const dir = isValidDirection(state.direction) ? state.direction : 'down';
 
       if (!sprite) {
         // Create new sprite
@@ -108,23 +116,47 @@ export class WorldScene extends Phaser.Scene {
         }
       }
 
-      // Smooth interpolation toward server position
-      const lerpFactor = 0.3;
-      const dx = state.x - sprite.x;
-      const dy = state.y - sprite.y;
-      
-      sprite.x += dx * lerpFactor;
-      sprite.y += dy * lerpFactor;
+      let isMoving = false;
+      let renderDir = dir;
+
+      if (id === playerId) {
+        // --- Client-Side Prediction for Local Player ---
+        if (this.currentDirection) {
+          isMoving = true;
+          renderDir = this.currentDirection;
+          switch (this.currentDirection) {
+            case 'up': sprite.y -= MOVE_SPEED; break;
+            case 'down': sprite.y += MOVE_SPEED; break;
+            case 'left': sprite.x -= MOVE_SPEED; break;
+            case 'right': sprite.x += MOVE_SPEED; break;
+          }
+        }
+        
+        // Reconciliation: Snap back if predicted position diverges too much from server
+        const dist = Phaser.Math.Distance.Between(sprite.x, sprite.y, state.x, state.y);
+        if (dist > 32) { // Tolerance threshold (1 tile)
+          sprite.x = state.x;
+          sprite.y = state.y;
+        }
+      } else {
+        // --- Smooth Interpolation for Remote Players ---
+        const lerpFactor = 0.3;
+        const dx = state.x - sprite.x;
+        const dy = state.y - sprite.y;
+        
+        sprite.x += dx * lerpFactor;
+        sprite.y += dy * lerpFactor;
+        
+        isMoving = Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5;
+      }
 
       // Animate based on movement
-      const isMoving = Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5;
-      
       if (isMoving) {
-        sprite.anims.play(`walk-${state.direction}`, true);
+        sprite.anims.play(`walk-${renderDir}`, true);
       } else {
         sprite.anims.stop();
         // Set idle frame based on direction
-        switch (state.direction) {
+        switch (renderDir) {
           case 'down': sprite.setFrame(0); break;
           case 'left': sprite.setFrame(4); break;
           case 'right': sprite.setFrame(8); break;
@@ -134,6 +166,40 @@ export class WorldScene extends Phaser.Scene {
       
       // Update depth so players sort correctly (Y-sorting)
       sprite.setDepth(sprite.y);
+    });
+
+    // ── Render all NPCs directly from Colyseus state ──
+    const serverNpcs = room?.state.npcs;
+    if (serverNpcs) {
+      serverNpcs.forEach((npcState, id) => {
+        let sprite = this.playerSprites.get(id); // Reuse the same sprite map for simplicity
+        const dir = isValidDirection(npcState.direction) ? npcState.direction : 'down';
+
+        if (!sprite) {
+          sprite = this.add.sprite(npcState.x, npcState.y, 'player'); // Using player sprite for now as placeholder
+          sprite.setOrigin(0.5, 1);
+          this.playerSprites.set(id, sprite);
+        }
+
+        sprite.x = npcState.x;
+        sprite.y = npcState.y;
+        
+        sprite.anims.stop();
+        switch (dir) {
+          case 'down': sprite.setFrame(0); break;
+          case 'left': sprite.setFrame(4); break;
+          case 'right': sprite.setFrame(8); break;
+          case 'up': sprite.setFrame(12); break;
+        }
+
+        sprite.setDepth(sprite.y);
+      });
+    }
+
+    // ── Check Interaction Input ──
+    // JustPressed ensures we don't spam the server if the user holds the spacebar down
+    if (Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+      networkManager.sendInteract();
     }
   }
 }

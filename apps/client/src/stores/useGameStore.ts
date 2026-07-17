@@ -1,35 +1,26 @@
 import { create } from 'zustand';
-import type { PlayerState } from '@pokemon-realms/shared';
 
 interface GameStore {
   connected: boolean;
+  playerCount: number;
   playerId: string | null;
-  players: Map<string, PlayerState>;
+  activeDialog: { npcId: string; text: string } | null;
 
   setConnected: (connected: boolean, playerId?: string) => void;
-  setPlayer: (id: string, state: PlayerState) => void;
-  removePlayer: (id: string) => void;
+  setPlayerCount: (count: number) => void;
+  setDialog: (dialog: { npcId: string; text: string } | null) => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
   connected: false,
+  playerCount: 0,
   playerId: null,
-  players: new Map(),
+  activeDialog: null,
 
   setConnected: (connected, playerId) =>
     set({ connected, playerId: playerId ?? null }),
 
-  setPlayer: (id, state) =>
-    set((prev) => {
-      const next = new Map(prev.players);
-      next.set(id, state);
-      return { players: next };
-    }),
+  setPlayerCount: (count) => set({ playerCount: count }),
 
-  removePlayer: (id) =>
-    set((prev) => {
-      const next = new Map(prev.players);
-      next.delete(id);
-      return { players: next };
-    }),
+  setDialog: (dialog) => set({ activeDialog: dialog }),
 }));

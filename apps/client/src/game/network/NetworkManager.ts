@@ -29,89 +29,33 @@ class NetworkManager {
     // Listen for players added (this automatically triggers for existing players too!)
     if (this.room.state.players) {
       this.room.state.players.onAdd((player, sessionId: string) => {
-        console.log(`✅ Player added via onAdd: ${sessionId}`, player);
-        useGameStore.getState().setPlayer(sessionId, {
-          id: sessionId,
-          x: player.x,
-          y: player.y,
-          direction: player.direction as any, // Cast to any to avoid strict direction typing issues
-        });
-
-        // Also listen for changes to this specific player (position, direction)
-        player.listen('x', () => {
-          useGameStore.getState().setPlayer(sessionId, {
-            id: sessionId,
-            x: player.x,
-            y: player.y,
-            direction: player.direction as any,
-          });
-        });
-        player.listen('y', () => {
-          useGameStore.getState().setPlayer(sessionId, {
-            id: sessionId,
-            x: player.x,
-            y: player.y,
-            direction: player.direction as any,
-          });
-        });
-        player.listen('direction', () => {
-          useGameStore.getState().setPlayer(sessionId, {
-            id: sessionId,
-            x: player.x,
-            y: player.y,
-            direction: player.direction as any,
-          });
-        });
+        console.log(`✅ Player added via onAdd: ${sessionId}`);
+        if (this.room?.state.players) {
+          useGameStore.getState().setPlayerCount(this.room.state.players.size);
+        }
       });
 
       this.room.state.players.onRemove((player, sessionId: string) => {
         console.log(`👋 Player removed via onRemove: ${sessionId}`);
-        useGameStore.getState().removePlayer(sessionId);
+        if (this.room?.state.players) {
+          useGameStore.getState().setPlayerCount(this.room.state.players.size);
+        }
       });
-
-      console.log('Room State:', this.room.state);
-      console.log('Players in state:', this.room.state.players, 'Size:', this.room.state.players?.size);
 
       // Initialize players already present in the room state
-      this.room.state.players.forEach((player, sessionId: string) => {
-        console.log(`✅ Player initialized from state: ${sessionId}`, player);
-        useGameStore.getState().setPlayer(sessionId, {
-          id: sessionId,
-          x: player.x,
-          y: player.y,
-          direction: player.direction as any,
-        });
-
-        player.listen('x', () => {
-          useGameStore.getState().setPlayer(sessionId, {
-            id: sessionId,
-            x: player.x,
-            y: player.y,
-            direction: player.direction as any,
-          });
-        });
-        player.listen('y', () => {
-          useGameStore.getState().setPlayer(sessionId, {
-            id: sessionId,
-            x: player.x,
-            y: player.y,
-            direction: player.direction as any,
-          });
-        });
-        player.listen('direction', () => {
-          useGameStore.getState().setPlayer(sessionId, {
-            id: sessionId,
-            x: player.x,
-            y: player.y,
-            direction: player.direction as any,
-          });
-        });
-      });
+      if (this.room.state.players.size > 0) {
+        useGameStore.getState().setPlayerCount(this.room.state.players.size);
+      }
     }
+
+    // Listen for custom messages
+    this.room.onMessage(MessageType.DIALOG, (message: { npcId: string; text: string }) => {
+      useGameStore.getState().setDialog(message);
+    });
 
     // Fallback onStateChange
     this.room.onStateChange((state: any) => {
-      console.log('🔄 onStateChange fired');
+      // console.log('🔄 onStateChange fired');
     });
 
     this.room.onLeave(() => {
@@ -120,6 +64,10 @@ class NetworkManager {
     });
 
     return this.room;
+  }
+
+  sendInteract() {
+    this.room?.send(MessageType.INTERACT);
   }
 
   sendMove(direction: Direction) {
@@ -132,6 +80,10 @@ class NetworkManager {
 
   getSessionId(): string | null {
     return this.room?.sessionId ?? null;
+  }
+
+  getRoom(): Room<WorldState> | null {
+    return this.room;
   }
 }
 
