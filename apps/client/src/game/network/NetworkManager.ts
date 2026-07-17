@@ -24,26 +24,13 @@ class NetworkManager {
       console.error(`Room error [${code}]:`, message);
     });
 
+    // Sync the INITIAL state immediately — onStateChange does NOT fire for
+    // the state that is already present at join time.
+    this.syncFromState(this.room.state);
+
+    // Sync on every subsequent state patch from the server
     this.room.onStateChange((state: any) => {
-      if (!state.players) return;
-      const store = useGameStore.getState();
-      const seen = new Set<string>();
-
-      state.players.forEach((player: any, sessionId: string) => {
-        seen.add(sessionId);
-        store.setPlayer(sessionId, {
-          id: sessionId,
-          x: player.x,
-          y: player.y,
-          direction: player.direction,
-        });
-      });
-
-      for (const [id] of store.players) {
-        if (!seen.has(id)) {
-          store.removePlayer(id);
-        }
-      }
+      this.syncFromState(state);
     });
 
     this.room.onLeave(() => {
@@ -52,6 +39,30 @@ class NetworkManager {
     });
 
     return this.room;
+  }
+
+  /** Read all players from Colyseus state and push into Zustand store */
+  private syncFromState(state: any) {
+    if (!state?.players) return;
+    const store = useGameStore.getState();
+    const seen = new Set<string>();
+
+    state.players.forEach((player: any, sessionId: string) => {
+      seen.add(sessionId);
+      store.setPlayer(sessionId, {
+        id: sessionId,
+        x: player.x,
+        y: player.y,
+        direction: player.direction,
+      });
+    });
+
+    // Remove players that are no longer in server state
+    for (const [id] of store.players) {
+      if (!seen.has(id)) {
+        store.removePlayer(id);
+      }
+    }
   }
 
   sendMove(direction: Direction) {
