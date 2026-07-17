@@ -4,6 +4,10 @@
 /** Direction a player can face / move */
 export type Direction = 'up' | 'down' | 'left' | 'right';
 
+export function isValidDirection(dir: any): dir is Direction {
+  return ['up', 'down', 'left', 'right'].includes(dir);
+}
+
 /** Movement message sent from client → server */
 export interface MoveMessage {
   direction: Direction;
@@ -28,9 +32,12 @@ export interface MapData {
 /** Protocol message types */
 export const MessageType = {
   MOVE: 'move',
+  INTERACT: 'interact',
+  DIALOG: 'dialog',
 } as const;
 
 export * from './schemas/PlayerSchema';
+export * from './schemas/NPCSchema';
 
 /** Movement speed in pixels per tick (server-authoritative) */
 export const MOVE_SPEED = 4;

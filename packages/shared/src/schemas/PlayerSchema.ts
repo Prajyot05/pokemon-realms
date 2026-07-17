@@ -1,4 +1,5 @@
 import { Schema, MapSchema, type } from '@colyseus/schema';
+import { NPCSchema } from './NPCSchema';
 
 export class PlayerSchema extends Schema {
   @type('string') id: string = '';
@@ -10,4 +11,5 @@ export class PlayerSchema extends Schema {
 
 export class WorldState extends Schema {
   @type({ map: PlayerSchema }) players = new MapSchema<PlayerSchema>();
+  @type({ map: NPCSchema }) npcs = new MapSchema<NPCSchema>();
 }
