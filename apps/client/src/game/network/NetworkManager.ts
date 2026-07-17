@@ -24,14 +24,26 @@ class NetworkManager {
       console.error(`Room error [${code}]:`, message);
     });
 
-    const state = this.room.state as any;
-    state.players.onAdd((player: any, sessionId: string) => {
-      this.syncPlayer(sessionId, player);
-      player.onChange(() => this.syncPlayer(sessionId, player));
-    });
+    this.room.onStateChange((state: any) => {
+      if (!state.players) return;
+      const store = useGameStore.getState();
+      const seen = new Set<string>();
 
-    state.players.onRemove((_p: any, sessionId: string) => {
-      useGameStore.getState().removePlayer(sessionId);
+      state.players.forEach((player: any, sessionId: string) => {
+        seen.add(sessionId);
+        store.setPlayer(sessionId, {
+          id: sessionId,
+          x: player.x,
+          y: player.y,
+          direction: player.direction,
+        });
+      });
+
+      for (const [id] of store.players) {
+        if (!seen.has(id)) {
+          store.removePlayer(id);
+        }
+      }
     });
 
     this.room.onLeave(() => {
@@ -41,17 +53,6 @@ class NetworkManager {
 
     return this.room;
   }
-
-  private syncPlayer(sessionId: string, player: any) {
-    useGameStore.getState().setPlayer(sessionId, {
-      id: sessionId,
-      x: player.x,
-      y: player.y,
-      direction: player.direction,
-    });
-  }
-
-
 
   sendMove(direction: Direction) {
     this.room?.send(MessageType.MOVE, { direction });
