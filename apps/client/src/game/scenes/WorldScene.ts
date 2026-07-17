@@ -33,16 +33,27 @@ export class WorldScene extends Phaser.Scene {
     });
   }
 
+  private currentDirection: Direction | null = null;
+
   update() {
     // ── Send input to server ──
+    let newDirection: Direction | null = null;
+    
     if (this.cursors.up.isDown) {
-      networkManager.sendMove('up');
+      newDirection = 'up';
     } else if (this.cursors.down.isDown) {
-      networkManager.sendMove('down');
+      newDirection = 'down';
     } else if (this.cursors.left.isDown) {
-      networkManager.sendMove('left');
+      newDirection = 'left';
     } else if (this.cursors.right.isDown) {
-      networkManager.sendMove('right');
+      newDirection = 'right';
+    }
+
+    if (newDirection !== this.currentDirection) {
+      this.currentDirection = newDirection;
+      if (newDirection) {
+        networkManager.sendMove(newDirection);
+      }
     }
 
     // ── Render all players from Zustand store ──

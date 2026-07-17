@@ -8,7 +8,6 @@ const SERVER_URL = 'ws://localhost:3001';
 class NetworkManager {
   private client: Client;
   private room: Room | null = null;
-  private pollInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.client = new Client(SERVER_URL);
@@ -25,39 +24,18 @@ class NetworkManager {
       console.error(`Room error [${code}]:`, message);
     });
 
-    // Try callback-based sync (may not work with reflected schemas)
-    try {
-      const state = this.room.state as any;
-      if (state.players && typeof state.players.onAdd === 'function') {
-        state.players.onAdd((player: any, sessionId: string) => {
-          this.syncPlayer(sessionId, player);
-          if (typeof player.onChange === 'function') {
-            player.onChange(() => this.syncPlayer(sessionId, player));
-          }
-        });
-        state.players.onRemove((_p: any, sessionId: string) => {
-          useGameStore.getState().removePlayer(sessionId);
-        });
-      }
-    } catch (e) {
-      console.warn('Schema callbacks not available, using polling only', e);
-    }
-
-    // onStateChange as secondary sync
-    this.room.onStateChange((roomState: any) => {
-      this.syncAllPlayers(roomState);
+    const state = this.room.state as any;
+    state.players.onAdd((player: any, sessionId: string) => {
+      this.syncPlayer(sessionId, player);
+      player.onChange(() => this.syncPlayer(sessionId, player));
     });
 
-    // Polling as guaranteed fallback — reads room.state directly every frame
-    this.pollInterval = setInterval(() => {
-      if (this.room?.state) {
-        this.syncAllPlayers(this.room.state as any);
-      }
-    }, 1000 / 30); // 30fps polling
+    state.players.onRemove((_p: any, sessionId: string) => {
+      useGameStore.getState().removePlayer(sessionId);
+    });
 
     this.room.onLeave(() => {
       useGameStore.getState().setConnected(false);
-      if (this.pollInterval) clearInterval(this.pollInterval);
       console.log('🔌 Disconnected from server');
     });
 
@@ -73,33 +51,7 @@ class NetworkManager {
     });
   }
 
-  private syncAllPlayers(state: any) {
-    if (!state.players) return;
 
-    const store = useGameStore.getState();
-    const seen = new Set<string>();
-
-    // MapSchema.forEach or iterate entries
-    const players = state.players;
-    if (typeof players.forEach === 'function') {
-      players.forEach((player: any, sessionId: string) => {
-        seen.add(sessionId);
-        store.setPlayer(sessionId, {
-          id: sessionId,
-          x: player.x,
-          y: player.y,
-          direction: player.direction,
-        });
-      });
-    }
-
-    // Remove players no longer in state
-    for (const [id] of store.players) {
-      if (!seen.has(id)) {
-        store.removePlayer(id);
-      }
-    }
-  }
 
   sendMove(direction: Direction) {
     this.room?.send(MessageType.MOVE, { direction });
