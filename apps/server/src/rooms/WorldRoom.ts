@@ -1,5 +1,5 @@
 import { Room, Client } from 'colyseus';
-import { WorldState, PlayerSchema } from '@pokemon-realms/shared';
+import { WorldState, PlayerSchema, NPCSchema } from '@pokemon-realms/shared';
 import { MOVE_SPEED, MessageType } from '@pokemon-realms/shared';
 import type { MoveMessage, Direction } from '@pokemon-realms/shared';
 import { mapManager } from '../maps/MapManager';
@@ -15,6 +15,16 @@ export class WorldRoom extends Room<WorldState> {
     this.mapCollision = mapManager.loadMap(this.mapId);
 
     this.setState(new WorldState());
+    
+    // Spawn a dummy NPC for testing (Professor Oak)
+    const oak = new NPCSchema();
+    oak.id = 'npc_oak_1';
+    oak.x = 400;
+    oak.y = 200; // Place above player spawn
+    oak.direction = 'down';
+    oak.sprite = 'npc 01'; // Uses npc 01.png
+    this.state.npcs.set(oak.id, oak);
+
     this.setSimulationInterval(() => this.update(), 1000 / 60);
 
     this.onMessage(MessageType.MOVE, (client: Client, message: MoveMessage) => {
@@ -32,6 +42,43 @@ export class WorldRoom extends Room<WorldState> {
       if (player) {
         player.isMoving = false;
       }
+    });
+
+    this.onMessage(MessageType.INTERACT, (client: Client) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+
+      // Calculate the tile exactly in front of the player
+      let targetX = player.x;
+      let targetY = player.y;
+
+      // Offset by 1 tile (32 pixels) in the facing direction
+      switch (player.direction) {
+        case 'up': targetY -= 32; break;
+        case 'down': targetY += 32; break;
+        case 'left': targetX -= 32; break;
+        case 'right': targetX += 32; break;
+      }
+
+      // Check if any NPC is at that target tile (allowing for a small tolerance)
+      this.state.npcs.forEach((npc) => {
+        const dist = Math.sqrt(Math.pow(npc.x - targetX, 2) + Math.pow(npc.y - targetY, 2));
+        if (dist < 32) {
+          // NPC found! Make them face the player
+          switch (player.direction) {
+            case 'up': npc.direction = 'down'; break;
+            case 'down': npc.direction = 'up'; break;
+            case 'left': npc.direction = 'right'; break;
+            case 'right': npc.direction = 'left'; break;
+          }
+          
+          // Send dialog directly to the client who interacted
+          client.send(MessageType.DIALOG, {
+            npcId: npc.id,
+            text: "Hello there! Welcome to the world of POKEMON! My name is OAK! People call me the POKEMON PROF! This world is inhabited by creatures called POKEMON!"
+          });
+        }
+      });
     });
 
     console.log(`🌍 Zone created: ${this.mapId}`);
