@@ -1,5 +1,5 @@
 import { Room, Client } from 'colyseus';
-import { WorldState, PlayerSchema } from '../schemas/PlayerSchema';
+import { WorldState, PlayerSchema } from '@pokemon-realms/shared';
 import { MOVE_SPEED, MessageType } from '@pokemon-realms/shared';
 import type { MoveMessage, Direction } from '@pokemon-realms/shared';
 import { mapManager } from '../maps/MapManager';

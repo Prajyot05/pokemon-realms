@@ -30,6 +30,8 @@ export const MessageType = {
   MOVE: 'move',
 } as const;
 
+export * from './schemas/PlayerSchema';
+
 /** Movement speed in pixels per tick (server-authoritative) */
 export const MOVE_SPEED = 4;
 

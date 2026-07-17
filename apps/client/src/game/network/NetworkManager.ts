@@ -3,18 +3,20 @@ import { useGameStore } from '../../stores/useGameStore';
 import { MessageType } from '@pokemon-realms/shared';
 import type { Direction } from '@pokemon-realms/shared';
 
+import { WorldState } from '@pokemon-realms/shared';
+
 const SERVER_URL = 'ws://localhost:3001';
 
 class NetworkManager {
   private client: Client;
-  private room: Room | null = null;
+  private room: Room<WorldState> | null = null;
 
   constructor() {
     this.client = new Client(SERVER_URL);
   }
 
-  async connect(mapId: string = 'pallet-town'): Promise<Room> {
-    this.room = await this.client.joinOrCreate('zone', { mapId });
+  async connect(mapId: string = 'pallet-town'): Promise<Room<WorldState>> {
+    this.room = await this.client.joinOrCreate<WorldState>('zone', { mapId }, WorldState);
 
     useGameStore.getState().setConnected(true, this.room.sessionId);
     console.log(`🔗 Connected as ${this.room.sessionId}`);
@@ -24,13 +26,92 @@ class NetworkManager {
       console.error(`Room error [${code}]:`, message);
     });
 
-    // Sync the INITIAL state immediately — onStateChange does NOT fire for
-    // the state that is already present at join time.
-    this.syncFromState(this.room.state);
+    // Listen for players added (this automatically triggers for existing players too!)
+    if (this.room.state.players) {
+      this.room.state.players.onAdd((player, sessionId: string) => {
+        console.log(`✅ Player added via onAdd: ${sessionId}`, player);
+        useGameStore.getState().setPlayer(sessionId, {
+          id: sessionId,
+          x: player.x,
+          y: player.y,
+          direction: player.direction as any, // Cast to any to avoid strict direction typing issues
+        });
 
-    // Sync on every subsequent state patch from the server
+        // Also listen for changes to this specific player (position, direction)
+        player.listen('x', () => {
+          useGameStore.getState().setPlayer(sessionId, {
+            id: sessionId,
+            x: player.x,
+            y: player.y,
+            direction: player.direction as any,
+          });
+        });
+        player.listen('y', () => {
+          useGameStore.getState().setPlayer(sessionId, {
+            id: sessionId,
+            x: player.x,
+            y: player.y,
+            direction: player.direction as any,
+          });
+        });
+        player.listen('direction', () => {
+          useGameStore.getState().setPlayer(sessionId, {
+            id: sessionId,
+            x: player.x,
+            y: player.y,
+            direction: player.direction as any,
+          });
+        });
+      });
+
+      this.room.state.players.onRemove((player, sessionId: string) => {
+        console.log(`👋 Player removed via onRemove: ${sessionId}`);
+        useGameStore.getState().removePlayer(sessionId);
+      });
+
+      console.log('Room State:', this.room.state);
+      console.log('Players in state:', this.room.state.players, 'Size:', this.room.state.players?.size);
+
+      // Initialize players already present in the room state
+      this.room.state.players.forEach((player, sessionId: string) => {
+        console.log(`✅ Player initialized from state: ${sessionId}`, player);
+        useGameStore.getState().setPlayer(sessionId, {
+          id: sessionId,
+          x: player.x,
+          y: player.y,
+          direction: player.direction as any,
+        });
+
+        player.listen('x', () => {
+          useGameStore.getState().setPlayer(sessionId, {
+            id: sessionId,
+            x: player.x,
+            y: player.y,
+            direction: player.direction as any,
+          });
+        });
+        player.listen('y', () => {
+          useGameStore.getState().setPlayer(sessionId, {
+            id: sessionId,
+            x: player.x,
+            y: player.y,
+            direction: player.direction as any,
+          });
+        });
+        player.listen('direction', () => {
+          useGameStore.getState().setPlayer(sessionId, {
+            id: sessionId,
+            x: player.x,
+            y: player.y,
+            direction: player.direction as any,
+          });
+        });
+      });
+    }
+
+    // Fallback onStateChange
     this.room.onStateChange((state: any) => {
-      this.syncFromState(state);
+      console.log('🔄 onStateChange fired');
     });
 
     this.room.onLeave(() => {
@@ -39,30 +120,6 @@ class NetworkManager {
     });
 
     return this.room;
-  }
-
-  /** Read all players from Colyseus state and push into Zustand store */
-  private syncFromState(state: any) {
-    if (!state?.players) return;
-    const store = useGameStore.getState();
-    const seen = new Set<string>();
-
-    state.players.forEach((player: any, sessionId: string) => {
-      seen.add(sessionId);
-      store.setPlayer(sessionId, {
-        id: sessionId,
-        x: player.x,
-        y: player.y,
-        direction: player.direction,
-      });
-    });
-
-    // Remove players that are no longer in server state
-    for (const [id] of store.players) {
-      if (!seen.has(id)) {
-        store.removePlayer(id);
-      }
-    }
   }
 
   sendMove(direction: Direction) {

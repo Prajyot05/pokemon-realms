@@ -95,7 +95,16 @@ const tmjContent = {
   "tilesets": [
     {
       "firstgid": 1,
-      "source": "../tilesets/outside.tsj"
+      "columns": 8,
+      "image": "../tilesets/outside.png",
+      "imageheight": 16064,
+      "imagewidth": 256,
+      "margin": 0,
+      "name": "outside",
+      "spacing": 0,
+      "tilecount": 4016,
+      "tileheight": 32,
+      "tilewidth": 32
     }
   ],
   "tilewidth": 32,

@@ -9,9 +9,12 @@ export function initGame() {
 
   game = new Phaser.Game({
     type: Phaser.AUTO,
-    width: GAME_WIDTH,
-    height: GAME_HEIGHT,
-    parent: 'game-container',
+    scale: {
+      mode: Phaser.Scale.RESIZE,
+      parent: 'game-container',
+      width: '100%',
+      height: '100%',
+    },
     backgroundColor: '#000000',
     scene: [WorldScene],
     physics: {
@@ -21,6 +24,7 @@ export function initGame() {
     input: {
       keyboard: true,
     },
+    pixelArt: true, // Keep sprites crisp
   });
 }
 

@@ -10,7 +10,7 @@ export class MapManager {
       return this.mapCache.get(mapId)!;
     }
 
-    const mapPath = path.resolve(__dirname, `../../../../client/public/assets/maps/${mapId}.tmj`);
+    const mapPath = path.resolve(__dirname, `../../../../apps/client/public/assets/maps/${mapId}.tmj`);
     if (!fs.existsSync(mapPath)) {
       throw new Error(`Map file not found: ${mapPath}`);
     }
