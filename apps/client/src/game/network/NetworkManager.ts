@@ -61,7 +61,11 @@ class NetworkManager {
       // Lock movement instantly before network connection finishes
       window.dispatchEvent(new CustomEvent('BATTLE_ENCOUNTER_START'));
       // Connect to the battle room concurrently
-      this.connectBattle(message.roomId);
+      this.connectBattle(message.roomId).catch(err => {
+        console.error('Failed to connect to battle room:', err);
+        useGameStore.getState().setBattling(false);
+        window.dispatchEvent(new CustomEvent('BATTLE_ENDED_PHASER')); // unlock world
+      });
     });
 
     return this.room;

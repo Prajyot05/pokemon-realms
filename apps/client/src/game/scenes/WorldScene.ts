@@ -86,6 +86,7 @@ export class WorldScene extends Phaser.Scene {
     
     window.addEventListener('BATTLE_ENDED_PHASER', () => {
       this.isBattling = false;
+      this.isEncountering = false;
     });
   }
 

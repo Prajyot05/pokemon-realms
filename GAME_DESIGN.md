@@ -621,4 +621,4 @@ Key systems and the engineering concepts behind them:
 
 ## Next Step
 
-Currently at **Phase 2 complete**. Next up: **Phase 3 — Battle Engine** — replacing the wild encounter instant-catch stub with a fully server-authoritative turn-based battle scene!
+Currently at **Phase 3 complete**. Next up: **Phase 4 — Party & PC Boxes** — creating the interfaces for managing captured Pokemon and storing them in the PC.
