@@ -107,11 +107,11 @@ export function Pokedex({ onClose }: { onClose: () => void }) {
                 }}
               >
                 <img
-                  src={`/assets/sprites/pokemon/front/${selectedPokemon.Name.toUpperCase()}.png`}
+                  src={`/assets/sprites/pokemon/front/${selectedPokemon.Name.toLowerCase()}.png`}
                   alt={selectedPokemon.Name}
                   style={{ width: 120, height: 120, imageRendering: 'pixelated' }}
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/assets/sprites/pokemon/front/BULBASAUR.png'; // Fallback
+                    (e.target as HTMLImageElement).src = '/assets/sprites/pokemon/front/bulbasaur.png'; // Fallback
                   }}
                 />
               </div>

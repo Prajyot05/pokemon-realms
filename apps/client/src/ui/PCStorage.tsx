@@ -88,12 +88,12 @@ export function PCStorage({ pc, onClose }: PCStorageProps) {
               >
                 {p && (
                   <img
-                    src={`/assets/sprites/pokemon/front/${p.speciesId}.png`}
+                    src={`/assets/sprites/pokemon/front/${p.speciesId.toLowerCase()}.png`}
                     alt={p.speciesId}
                     style={{ width: 48, height: 48, imageRendering: 'pixelated' }}
                     title={`Lv${p.level} ${(pokemonData as any)[p.speciesId]?.Name}`}
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/assets/sprites/pokemon/front/BULBASAUR.png';
+                      (e.target as HTMLImageElement).src = '/assets/sprites/pokemon/front/bulbasaur.png';
                     }}
                   />
                 )}

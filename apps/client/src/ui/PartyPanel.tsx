@@ -39,11 +39,11 @@ export function PartyPanel({ party }: PartyPanelProps) {
               }}
             >
               <img
-                src={`/assets/sprites/pokemon/front/${p.speciesId}.png`}
+                src={`/assets/sprites/pokemon/front/${p.speciesId.toLowerCase()}.png`}
                 alt={p.speciesId}
                 style={{ width: 40, height: 40, marginRight: 8, imageRendering: 'pixelated' }}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/assets/sprites/pokemon/front/BULBASAUR.png';
+                  (e.target as HTMLImageElement).src = '/assets/sprites/pokemon/front/bulbasaur.png';
                 }}
               />
               <div style={{ flex: 1 }}>
