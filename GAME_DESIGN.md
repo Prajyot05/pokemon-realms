@@ -592,16 +592,16 @@ Key systems and the engineering concepts behind them:
 - [x] **M2.4** Party management + PC storage (PostgreSQL)
 
 ### Phase 3: Battle Engine
-- [ ] **M3.1** Turn-based battle core (state machine + damage formula)
-- [ ] **M3.2** Status effects + secondary move effects
-- [ ] **M3.3** PvP challenge + Elo matchmaking
-- [ ] **M3.4** Live battle spectating + replay system
+- [x] **M3.1** Turn-based battle core (state machine + damage formula)
+- [x] **M3.2** Status effects + secondary move effects
+- [x] **M3.3** PvP challenge + Elo matchmaking
+- [x] **M3.4** Live battle spectating + replay system
 
 ### Phase 4: Social & Economy
 - [x] **M4.1** Auth (JWT + bcrypt) + session persistence
-- [ ] **M4.2** Chat system (zone, proximity, whisper)
-- [ ] **M4.3** Trading system (live + GTS)
-- [ ] **M4.4** Player-run gyms
+- [x] **M4.2** Chat system (zone, proximity, whisper)
+- [x] **M4.3** Trading system (live + GTS)
+- [x] **M4.4** Player-run gyms
 
 ### Phase 5: Endgame & Polish
 - [ ] **M5.1** Evolution + item system
@@ -621,4 +621,4 @@ Key systems and the engineering concepts behind them:
 
 ## Next Step
 
-Currently at **Phase 3 complete**. Next up: **Phase 4 — Party & PC Boxes** — creating the interfaces for managing captured Pokemon and storing them in the PC.
+Currently at **Phase 4 complete**. Next up: **Phase 5 — Endgame & Polish** — adding evolution, items, NPC battle AI, breeding, achievements, and scaling infrastructure.
