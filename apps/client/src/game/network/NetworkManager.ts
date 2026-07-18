@@ -58,6 +58,8 @@ class NetworkManager {
     });
 
     this.room.onMessage('BATTLE_START', (message: { roomId: string }) => {
+      // Lock movement instantly before network connection finishes
+      window.dispatchEvent(new CustomEvent('BATTLE_ENCOUNTER_START'));
       // Connect to the battle room concurrently
       this.connectBattle(message.roomId);
     });
@@ -70,11 +72,24 @@ class NetworkManager {
     if (!token) throw new Error('No token');
     
     this.battleRoom = await this.client.joinById<BattleState>(roomId, { token });
-    
     useGameStore.getState().setBattling(true, roomId);
 
     // Phaser scenes can listen to this event to launch BattleScene
     window.dispatchEvent(new CustomEvent('BATTLE_START_PHASER', { detail: { roomId } }));
+
+    this.battleRoom.onMessage('BATTLE_TURN_RESULT', (result: any) => {
+      window.dispatchEvent(new CustomEvent('BATTLE_TURN_RESULT', { detail: result }));
+    });
+
+    this.battleRoom.onMessage('BATTLE_END', (data: any) => {
+      window.dispatchEvent(new CustomEvent('BATTLE_END', { detail: data }));
+    });
+
+    this.battleRoom.onLeave(() => {
+      useGameStore.getState().setBattling(false);
+      window.dispatchEvent(new CustomEvent('BATTLE_ENDED_PHASER'));
+      this.battleRoom = null;
+    });
 
     return this.battleRoom;
   }

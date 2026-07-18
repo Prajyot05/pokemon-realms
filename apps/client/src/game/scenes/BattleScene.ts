@@ -156,6 +156,9 @@ export class BattleScene extends Phaser.Scene {
         });
       } else if (event.type === 'DAMAGE') {
         const target = event.targetId === 'WILD' ? this.p2Sprite : this.p1Sprite;
+        window.dispatchEvent(new CustomEvent('BATTLE_UI_DAMAGE', { 
+          detail: { targetId: event.targetId, amount: event.amount }
+        }));
         this.tweens.add({
           targets: target,
           alpha: 0.2,

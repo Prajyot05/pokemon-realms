@@ -163,6 +163,9 @@ export class BattleRoom extends Room<BattleState> {
         
         if (turnResult.isBattleEnded || p1Instance.data.currentHp <= 0 || p2Instance.data.currentHp <= 0) {
           this.state.phase = 'BATTLE_END';
+          this.broadcast('BATTLE_END', { 
+            winner: p1Instance.data.currentHp > 0 ? this.p1Id : this.p2Id 
+          });
           setTimeout(() => {
             this.disconnect();
           }, 5000);

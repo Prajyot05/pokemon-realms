@@ -10,6 +10,7 @@ export class WorldScene extends Phaser.Scene {
   private playerSprites: Map<string, Phaser.GameObjects.Sprite> = new Map();
   private currentDirection: Direction | null = null;
   private isBattling: boolean = false;
+  private isEncountering: boolean = false;
 
   constructor() {
     super({ key: 'WorldScene' });
@@ -61,11 +62,17 @@ export class WorldScene extends Phaser.Scene {
       console.error('Failed to connect to server:', err);
     });
 
+    // Pre-battle freeze
+    window.addEventListener('BATTLE_ENCOUNTER_START', () => {
+      this.isEncountering = true;
+    });
+
     window.addEventListener('BATTLE_START_PHASER', (e: Event) => {
       const customEvent = e as CustomEvent;
       const roomId = customEvent.detail.roomId;
       
       this.isBattling = true;
+      this.isEncountering = false;
       this.currentDirection = null; // Stop moving
       
       // Classic Pokemon battle transition: Flash screen white
@@ -92,7 +99,7 @@ export class WorldScene extends Phaser.Scene {
 
     // Check if dialog or battle is active, block movement if so
     const { activeDialog } = useGameStore.getState();
-    if (activeDialog || this.isBattling) {
+    if (activeDialog || this.isBattling || this.isEncountering) {
       newDirection = null;
     }
 
