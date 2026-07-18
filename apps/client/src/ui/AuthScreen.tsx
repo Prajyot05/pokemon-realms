@@ -211,14 +211,14 @@ export function AuthScreen({ onLogin }: { onLogin: (token: string, username: str
               transform: hoverState === 'submit' && !loading ? 'translateY(-2px)' : 'none'
             }}
           >
-            {loading ? 'SYNCING PC DATA...' : (isLogin ? 'ESTABLISH LINK CABLE' : 'OBTAIN TRAINER CARD')}
+            {loading ? 'SYNCING PC DATA...' : (isLogin ? 'LOGIN TO WORLD' : 'CREATE ACCOUNT')}
           </button>
         </form>
 
         <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '14px', color: '#94a3b8' }}>
           {isLogin ? (
             <p style={{ margin: 0 }}>
-              Ready to begin your journey?{' '}
+              New to Pokemon Realms?{' '}
               <span 
                 style={{ 
                   color: hoverState === 'toggle' ? '#60a5fa' : '#3b82f6', 
@@ -230,12 +230,12 @@ export function AuthScreen({ onLogin }: { onLogin: (token: string, username: str
                 onMouseLeave={() => setHoverState('')}
                 onClick={() => { setIsLogin(false); setError(''); }}
               >
-                Register in Hall of Fame
+                Create an Account
               </span>
             </p>
           ) : (
             <p style={{ margin: 0 }}>
-              Already possess a Trainer Card?{' '}
+              Already have an account?{' '}
               <span 
                 style={{ 
                   color: hoverState === 'toggle' ? '#60a5fa' : '#3b82f6', 
@@ -247,7 +247,7 @@ export function AuthScreen({ onLogin }: { onLogin: (token: string, username: str
                 onMouseLeave={() => setHoverState('')}
                 onClick={() => { setIsLogin(true); setError(''); }}
               >
-                Authenticate Here
+                Login here
               </span>
             </p>
           )}
