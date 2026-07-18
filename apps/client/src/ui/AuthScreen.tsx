@@ -8,6 +8,7 @@ export function AuthScreen({ onLogin }: { onLogin: (token: string, username: str
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hoverState, setHoverState] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +26,7 @@ export function AuthScreen({ onLogin }: { onLogin: (token: string, username: str
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Authentication failed');
+        throw new Error(data.message || 'Authentication failed. Professor Oak is disappointed.');
       }
 
       onLogin(data.token, data.username);
@@ -44,53 +45,147 @@ export function AuthScreen({ onLogin }: { onLogin: (token: string, username: str
         left: 0,
         width: '100%',
         height: '100%',
-        background: '#2c3e50', // Dark retro blue background
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999,
-        fontFamily: 'monospace',
+        fontFamily: '"Inter", "Roboto", sans-serif', // Modern sleek font
       }}
     >
+      {/* Dynamic Background Orbs for personality */}
+      <div style={{
+        position: 'absolute',
+        top: '10%',
+        left: '20%',
+        width: '300px',
+        height: '300px',
+        background: 'radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, rgba(0,0,0,0) 70%)',
+        borderRadius: '50%',
+        filter: 'blur(40px)',
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '10%',
+        right: '20%',
+        width: '400px',
+        height: '400px',
+        background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0,0,0,0) 70%)',
+        borderRadius: '50%',
+        filter: 'blur(60px)',
+      }} />
+
       <div
         style={{
-          background: '#ecf0f1',
-          padding: 32,
-          borderRadius: 8,
-          border: '4px solid #34495e',
-          width: 320,
-          boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+          background: 'rgba(30, 41, 59, 0.7)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          padding: '48px',
+          borderRadius: '24px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          width: '100%',
+          maxWidth: '420px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          position: 'relative',
+          overflow: 'hidden'
         }}
       >
-        <h1 style={{ margin: '0 0 24px 0', textAlign: 'center', color: '#2c3e50' }}>
-          {isLogin ? 'TRAINER LOGIN' : 'NEW TRAINER'}
-        </h1>
+        {/* Top subtle highlight */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '2px',
+          background: 'linear-gradient(90deg, transparent, #3b82f6, #ef4444, transparent)',
+          opacity: 0.8
+        }} />
+
+        {/* Branding Logo */}
+        <div style={{ marginBottom: '32px', textAlign: 'center', width: '100%' }}>
+          <img 
+            src="/assets/images/logo.png" 
+            alt="Pokemon Realms Logo" 
+            style={{ 
+              maxWidth: '100%', 
+              height: 'auto', 
+              maxHeight: '180px',
+              filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.5))',
+              transform: 'scale(1.05)'
+            }} 
+          />
+        </div>
         
         {error && (
-          <div style={{ background: '#e74c3c', color: '#fff', padding: 8, marginBottom: 16, borderRadius: 4, textAlign: 'center' }}>
+          <div style={{ 
+            background: 'rgba(239, 68, 68, 0.1)', 
+            borderLeft: '4px solid #ef4444',
+            color: '#fca5a5', 
+            padding: '12px 16px', 
+            marginBottom: '24px', 
+            borderRadius: '0 8px 8px 0', 
+            width: '100%',
+            fontSize: '14px',
+            boxSizing: 'border-box'
+          }}>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>USERNAME</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: '600', color: '#94a3b8', letterSpacing: '1px', textTransform: 'uppercase' }}>
+              Trainer Name
+            </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              style={{ width: '100%', padding: 8, border: '2px solid #bdc3c7', borderRadius: 4, boxSizing: 'border-box' }}
+              placeholder="e.g. Ash Ketchum"
+              style={{ 
+                width: '100%', 
+                padding: '14px 16px', 
+                background: 'rgba(15, 23, 42, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.1)', 
+                borderRadius: '12px', 
+                color: '#f8fafc',
+                fontSize: '16px',
+                outline: 'none',
+                boxSizing: 'border-box',
+                transition: 'border-color 0.2s, box-shadow 0.2s'
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.2)'; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.boxShadow = 'none'; }}
               required
             />
           </div>
           
           <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>PASSWORD</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: '600', color: '#94a3b8', letterSpacing: '1px', textTransform: 'uppercase' }}>
+              Secret ID (Password)
+            </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%', padding: 8, border: '2px solid #bdc3c7', borderRadius: 4, boxSizing: 'border-box' }}
+              placeholder="••••••••"
+              style={{ 
+                width: '100%', 
+                padding: '14px 16px', 
+                background: 'rgba(15, 23, 42, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.1)', 
+                borderRadius: '12px', 
+                color: '#f8fafc',
+                fontSize: '16px',
+                outline: 'none',
+                boxSizing: 'border-box',
+                transition: 'border-color 0.2s, box-shadow 0.2s'
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.2)'; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.boxShadow = 'none'; }}
               required
             />
           </div>
@@ -98,34 +193,61 @@ export function AuthScreen({ onLogin }: { onLogin: (token: string, username: str
           <button
             type="submit"
             disabled={loading}
+            onMouseEnter={() => setHoverState('submit')}
+            onMouseLeave={() => setHoverState('')}
             style={{
-              background: '#3498db',
-              color: '#fff',
+              background: hoverState === 'submit' ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+              color: '#ffffff',
               border: 'none',
-              padding: 12,
-              borderRadius: 4,
-              fontWeight: 'bold',
+              padding: '16px',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: '700',
+              letterSpacing: '0.5px',
               cursor: loading ? 'not-allowed' : 'pointer',
-              marginTop: 8,
+              marginTop: '12px',
+              boxShadow: hoverState === 'submit' ? '0 10px 15px -3px rgba(239, 68, 68, 0.4)' : '0 4px 6px -1px rgba(239, 68, 68, 0.2)',
+              transition: 'all 0.2s ease',
+              transform: hoverState === 'submit' && !loading ? 'translateY(-2px)' : 'none'
             }}
           >
-            {loading ? 'PROCESSING...' : (isLogin ? 'ENTER WORLD' : 'REGISTER')}
+            {loading ? 'SYNCING PC DATA...' : (isLogin ? 'ESTABLISH LINK CABLE' : 'OBTAIN TRAINER CARD')}
           </button>
         </form>
 
-        <div style={{ marginTop: 24, textAlign: 'center', fontSize: 14 }}>
+        <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '14px', color: '#94a3b8' }}>
           {isLogin ? (
-            <p>
-              Don't have an account?{' '}
-              <span style={{ color: '#3498db', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => setIsLogin(false)}>
-                Register here
+            <p style={{ margin: 0 }}>
+              Ready to begin your journey?{' '}
+              <span 
+                style={{ 
+                  color: hoverState === 'toggle' ? '#60a5fa' : '#3b82f6', 
+                  cursor: 'pointer', 
+                  fontWeight: '600',
+                  transition: 'color 0.2s'
+                }} 
+                onMouseEnter={() => setHoverState('toggle')}
+                onMouseLeave={() => setHoverState('')}
+                onClick={() => { setIsLogin(false); setError(''); }}
+              >
+                Register in Hall of Fame
               </span>
             </p>
           ) : (
-            <p>
-              Already a trainer?{' '}
-              <span style={{ color: '#3498db', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => setIsLogin(true)}>
-                Login here
+            <p style={{ margin: 0 }}>
+              Already possess a Trainer Card?{' '}
+              <span 
+                style={{ 
+                  color: hoverState === 'toggle' ? '#60a5fa' : '#3b82f6', 
+                  cursor: 'pointer', 
+                  fontWeight: '600',
+                  transition: 'color 0.2s'
+                }} 
+                onMouseEnter={() => setHoverState('toggle')}
+                onMouseLeave={() => setHoverState('')}
+                onClick={() => { setIsLogin(true); setError(''); }}
+              >
+                Authenticate Here
               </span>
             </p>
           )}
