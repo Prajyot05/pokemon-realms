@@ -28,16 +28,20 @@ export function Pokedex({ onClose }: { onClose: () => void }) {
         boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
         overflow: 'hidden',
         fontFamily: 'monospace',
+        flexWrap: 'wrap', // Better responsiveness
       }}
     >
       {/* Left Panel - List */}
       <div
         style={{
-          width: '30%',
+          width: '100%',
+          maxWidth: '300px',
+          minWidth: '200px',
           background: '#f1c40f', // Inner yellow
           borderRight: '4px solid #c0392b',
           display: 'flex',
           flexDirection: 'column',
+          flex: '1 1 30%',
         }}
       >
         <div style={{ padding: 12, background: '#c0392b', color: '#fff', fontWeight: 'bold' }}>
@@ -67,10 +71,12 @@ export function Pokedex({ onClose }: { onClose: () => void }) {
       {/* Right Panel - Details */}
       <div
         style={{
-          flex: 1,
+          flex: '2 1 60%',
           padding: 24,
           background: '#ecf0f1',
           position: 'relative',
+          color: '#333', // Fix legibility (name was white on light gray)
+          overflowY: 'auto', // Allow scrolling for responsiveness
         }}
       >
         <button
@@ -93,7 +99,7 @@ export function Pokedex({ onClose }: { onClose: () => void }) {
 
         {selectedPokemon && (
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 32 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 32 }}>
               <div
                 style={{
                   background: '#fff',
@@ -104,6 +110,7 @@ export function Pokedex({ onClose }: { onClose: () => void }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  flexShrink: 0,
                 }}
               >
                 <img
