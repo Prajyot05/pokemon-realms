@@ -59,6 +59,14 @@ export class WorldScene extends Phaser.Scene {
     networkManager.connect('pallet-town', token).catch((err) => {
       console.error('Failed to connect to server:', err);
     });
+
+    window.addEventListener('BATTLE_START_PHASER', (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const roomId = customEvent.detail.roomId;
+      
+      this.scene.pause();
+      this.scene.launch('BattleScene', { roomId });
+    });
   }
 
   update() {

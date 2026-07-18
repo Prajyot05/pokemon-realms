@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { WorldScene } from './scenes/WorldScene';
+import { BattleScene } from './scenes/BattleScene';
 import { GAME_WIDTH, GAME_HEIGHT } from '@pokemon-realms/shared';
 
 let game: Phaser.Game | null = null;
@@ -16,7 +17,7 @@ export function initGame() {
       height: '100%',
     },
     backgroundColor: '#000000',
-    scene: [WorldScene],
+    scene: [WorldScene, BattleScene],
     physics: {
       default: 'arcade',
       arcade: { debug: false },

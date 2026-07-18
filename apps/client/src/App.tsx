@@ -3,6 +3,7 @@ import { initGame, destroyGame } from './game/PhaserGame';
 import { HUD } from './ui/HUD';
 import { DialogBox } from './ui/DialogBox';
 import { AuthScreen } from './ui/AuthScreen';
+import { BattleUI } from './ui/BattleUI';
 
 export function App() {
   const initialized = useRef(false);
@@ -49,6 +50,7 @@ export function App() {
       <div id="ui-overlay">
         <HUD />
         <DialogBox />
+        <BattleUI />
       </div>
     </>
   );

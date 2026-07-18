@@ -3,7 +3,7 @@ import { useGameStore } from '../../stores/useGameStore';
 import { MessageType } from '@pokemon-realms/shared';
 import type { Direction } from '@pokemon-realms/shared';
 
-import { WorldState } from '@pokemon-realms/shared';
+import { WorldState, BattleState } from '@pokemon-realms/shared';
 
 const SERVER_URL = 'ws://localhost:3001';
 
@@ -56,7 +56,26 @@ class NetworkManager {
       console.log('🔌 Disconnected from server');
     });
 
+    this.room.onMessage('BATTLE_START', (message: { roomId: string }) => {
+      // Connect to the battle room concurrently
+      this.connectBattle(message.roomId);
+    });
+
     return this.room;
+  }
+
+  async connectBattle(roomId: string): Promise<Room<BattleState>> {
+    const token = localStorage.getItem('jwt');
+    if (!token) throw new Error('No token');
+    
+    const battleRoom = await this.client.joinById<BattleState>(roomId, { token });
+    
+    useGameStore.getState().setBattling(true, roomId);
+
+    // Phaser scenes can listen to this event to launch BattleScene
+    window.dispatchEvent(new CustomEvent('BATTLE_START_PHASER', { detail: { roomId } }));
+
+    return battleRoom;
   }
 
   sendInteract() {
