@@ -52,18 +52,34 @@ export class WorldRoom extends Room<WorldState> {
       let targetX = player.x;
       let targetY = player.y;
 
-      // Offset by 1 tile (32 pixels) in the facing direction
-      switch (player.direction) {
-        case 'up': targetY -= 32; break;
-        case 'down': targetY += 32; break;
-        case 'left': targetX -= 32; break;
-        case 'right': targetX += 32; break;
-      }
-
-      // Check if any NPC is at that target tile (allowing for a small tolerance)
+      // Check if any NPC is in front of the player using a directional bounding box
       this.state.npcs.forEach((npc) => {
-        const dist = Math.sqrt(Math.pow(npc.x - targetX, 2) + Math.pow(npc.y - targetY, 2));
-        if (dist < 32) {
+        let isFacingNPC = false;
+        
+        const dx = npc.x - player.x;
+        const dy = npc.y - player.y;
+
+        // Allow a small "wiggle room" of 20 pixels on the perpendicular axis
+        const alignThreshold = 24; 
+        // How far they can reach in the facing direction (1.5 tiles)
+        const reachThreshold = 48; 
+        
+        switch (player.direction) {
+          case 'up':
+            if (dy < 0 && dy > -reachThreshold && Math.abs(dx) < alignThreshold) isFacingNPC = true;
+            break;
+          case 'down':
+            if (dy > 0 && dy < reachThreshold && Math.abs(dx) < alignThreshold) isFacingNPC = true;
+            break;
+          case 'left':
+            if (dx < 0 && dx > -reachThreshold && Math.abs(dy) < alignThreshold) isFacingNPC = true;
+            break;
+          case 'right':
+            if (dx > 0 && dx < reachThreshold && Math.abs(dy) < alignThreshold) isFacingNPC = true;
+            break;
+        }
+        
+        if (isFacingNPC) {
           // NPC found! Make them face the player
           switch (player.direction) {
             case 'up': npc.direction = 'down'; break;

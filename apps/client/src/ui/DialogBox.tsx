@@ -5,23 +5,24 @@ export function DialogBox() {
   const activeDialog = useGameStore((s) => s.activeDialog);
   const setDialog = useGameStore((s) => s.setDialog);
   const [displayedText, setDisplayedText] = useState('');
-  const textIndex = useRef(0);
 
   useEffect(() => {
     if (!activeDialog) {
       setDisplayedText('');
-      textIndex.current = 0;
       return;
     }
 
-    // Simple typewriter effect
+    setDisplayedText('');
+
+    // Simple typewriter effect using deterministic string slicing
     const interval = setInterval(() => {
-      if (textIndex.current < activeDialog.text.length) {
-        setDisplayedText((prev) => prev + activeDialog.text[textIndex.current]);
-        textIndex.current++;
-      } else {
+      setDisplayedText((prev) => {
+        if (prev.length < activeDialog.text.length) {
+          return activeDialog.text.slice(0, prev.length + 1);
+        }
         clearInterval(interval);
-      }
+        return prev;
+      });
     }, 30); // 30ms per character
 
     return () => clearInterval(interval);
@@ -33,14 +34,16 @@ export function DialogBox() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' || e.code === 'Enter') {
-        // If text is still typing, skip to end
-        if (textIndex.current < activeDialog.text.length) {
-          setDisplayedText(activeDialog.text);
-          textIndex.current = activeDialog.text.length;
-        } else {
-          // Close dialog
-          setDialog(null);
-        }
+        setDisplayedText((prev) => {
+          // If text is still typing, skip to end
+          if (prev.length < activeDialog.text.length) {
+            return activeDialog.text;
+          } else {
+            // Close dialog
+            setDialog(null);
+            return prev;
+          }
+        });
       }
     };
 
@@ -75,7 +78,7 @@ export function DialogBox() {
         <p style={{ margin: 0, lineHeight: '1.5' }}>{displayedText}</p>
         
         {/* Blinking indicator when text finishes typing */}
-        {textIndex.current === activeDialog.text.length && (
+        {displayedText.length === activeDialog.text.length && (
           <div
             style={{
               position: 'absolute',
