@@ -61,6 +61,15 @@ class NetworkManager {
       useGameStore.getState().addChatMessages(messages);
     });
 
+    this.room.onMessage('GYM_LIST', (gyms: any[]) => {
+      useGameStore.getState().setGyms(gyms);
+      window.dispatchEvent(new CustomEvent('GYMS_UPDATED', { detail: gyms }));
+    });
+
+    this.room.onMessage('GYM_LEADERBOARD', (leaderboard: any[]) => {
+      useGameStore.getState().setGymLeaderboard(leaderboard);
+    });
+
     this.room.onMessage('TRADE_REQUEST', (message: { fromUsername: string; fromPlayerId: number }) => {
       useGameStore.getState().setTradeRequest(message);
     });
@@ -195,6 +204,18 @@ class NetworkManager {
 
   sendTradeCancel() {
     this.tradeRoom?.send('TRADE_CANCEL');
+  }
+
+  sendGymCreate(typeSpecialty: string, badgeName: string) {
+    this.room?.send('GYM_CREATE', { typeSpecialty, badgeName });
+  }
+
+  sendGymChallenge(gymId: number) {
+    this.room?.send('GYM_CHALLENGE', { gymId });
+  }
+
+  fetchGymLeaderboard() {
+    this.room?.send('FETCH_GYM_LEADERBOARD');
   }
 
   getSessionId(): string | null {

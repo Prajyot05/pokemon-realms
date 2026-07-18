@@ -23,6 +23,13 @@ interface GameStore {
   tradeRequest: { fromUsername: string; fromPlayerId: number } | null;
   setTrading: (isTrading: boolean, tradeRoomId?: string) => void;
   setTradeRequest: (req: { fromUsername: string; fromPlayerId: number } | null) => void;
+
+  gyms: any[];
+  gymLeaderboard: any[];
+  isGymPanelOpen: boolean;
+  setGyms: (gyms: any[]) => void;
+  setGymLeaderboard: (lb: any[]) => void;
+  setGymPanelOpen: (isOpen: boolean) => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -51,4 +58,11 @@ export const useGameStore = create<GameStore>((set) => ({
   tradeRequest: null,
   setTrading: (isTrading, tradeRoomId) => set({ isTrading, tradeRoomId: tradeRoomId ?? null }),
   setTradeRequest: (req) => set({ tradeRequest: req }),
+
+  gyms: [],
+  gymLeaderboard: [],
+  isGymPanelOpen: false,
+  setGyms: (gyms) => set({ gyms }),
+  setGymLeaderboard: (gymLeaderboard) => set({ gymLeaderboard }),
+  setGymPanelOpen: (isGymPanelOpen) => set({ isGymPanelOpen }),
 }));

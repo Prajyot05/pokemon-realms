@@ -101,6 +101,23 @@ export function HUD({ onLogout }: { onLogout: () => void }) {
       </button>
 
       <button
+        onClick={() => useGameStore.getState().setGymPanelOpen(true)}
+        style={{
+          marginTop: 8,
+          background: '#f39c12',
+          color: '#fff',
+          border: '1px solid #d68910',
+          borderRadius: 4,
+          padding: '4px 8px',
+          cursor: 'pointer',
+          width: '100%',
+          fontWeight: 'bold',
+        }}
+      >
+        GYMS
+      </button>
+
+      <button
         onClick={onLogout}
         style={{
           marginTop: 8,

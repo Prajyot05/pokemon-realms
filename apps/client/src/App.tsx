@@ -7,6 +7,7 @@ import { BattleUI } from './ui/BattleUI';
 
 import { ChatPanel } from './ui/ChatPanel';
 import { TradeWindow, TradeRequestOverlay } from './ui/TradeWindow';
+import { GymPanel } from './ui/GymPanel';
 
 export function App() {
   const initialized = useRef(false);
@@ -63,6 +64,7 @@ export function App() {
         <BattleUI />
         <TradeWindow />
         <TradeRequestOverlay />
+        <GymPanel />
         <ChatPanel />
       </div>
     </>

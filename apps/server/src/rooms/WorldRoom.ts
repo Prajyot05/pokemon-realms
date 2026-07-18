@@ -9,6 +9,8 @@ import { getUserParty, getUserPC } from '../db/queries/pokemon';
 import { matchMaker } from 'colyseus';
 import { ChatManager } from '../chat/ChatManager';
 import { SendChatMessage } from '@pokemon-realms/shared';
+import { gymManager } from '../gyms/GymManager';
+import { createGym, getGymsByZone, getGymLeaderboard } from '../db/queries/gyms';
 
 const VALID_DIRECTIONS = new Set<Direction>(['up', 'down', 'left', 'right']);
 
@@ -237,6 +239,43 @@ export class WorldRoom extends Room<WorldState> {
       }
     });
 
+    this.onMessage('GYM_CREATE', async (client: Client, message: { typeSpecialty: string; badgeName: string }) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player) return;
+      try {
+        const gym = await createGym(
+          client.userData.userId,
+          player.id, // username fallback
+          this.mapId,
+          Math.floor(player.x / 32),
+          Math.floor(player.y / 32),
+          message.typeSpecialty,
+          message.badgeName
+        );
+        // Broadcast new gym to all in zone
+        const gyms = await getGymsByZone(this.mapId);
+        this.broadcast('GYM_LIST', gyms);
+      } catch (e) {
+        console.error('Failed to create gym:', e);
+      }
+    });
+
+    this.onMessage('GYM_CHALLENGE', async (client: Client, message: { gymId: number }) => {
+      const added = await gymManager.challengeGym(message.gymId, client.userData.userId);
+      if (added) {
+        client.send('CHAT_MESSAGE', { type: 'SYSTEM', senderName: 'SYSTEM', text: 'You joined the gym challenge queue.', timestamp: Date.now() });
+      }
+    });
+
+    this.onMessage('FETCH_GYM_LEADERBOARD', async (client: Client) => {
+      try {
+        const leaderboard = await getGymLeaderboard();
+        client.send('GYM_LEADERBOARD', leaderboard);
+      } catch (e) {
+        console.error('Failed to fetch gym leaderboard:', e);
+      }
+    });
+
     this.onMessage('ACCEPT_CHALLENGE', async (client: Client, message: { fromPlayerId: number }) => {
       const p1Id = client.userData.userId;
       const p2Id = message.fromPlayerId;
@@ -267,15 +306,25 @@ export class WorldRoom extends Room<WorldState> {
     player.x = 400;
     player.y = 300;
     this.state.players.set(client.sessionId, player);
-    this.playerTiles.set(client.sessionId, { x: Math.floor(400/32), y: Math.floor(300/32) });
-    console.log(`✅ Player joined: ${client.sessionId}`);
+    const x = Math.floor(400/32);
+    const y = Math.floor(300/32);
+    this.playerTiles.set(client.sessionId, { x, y });
+
+    // Sync gym status
+    gymManager.handlePlayerConnect(client.userData.userId, this.mapId).then(async () => {
+      // Send gym list to the connected player
+      const gyms = await getGymsByZone(this.mapId);
+      client.send('GYM_LIST', gyms);
+    });
   }
 
-  onLeave(client: Client) {
+  onLeave(client: Client, consented: boolean) {
     console.log('👋 Player left:', client.sessionId);
     this.playerTiles.delete(client.sessionId);
     this.playersInBattle.delete(client.sessionId);
     this.state.players.delete(client.sessionId);
+    
+    gymManager.handlePlayerDisconnect(client.userData.userId).catch(console.error);
   }
 
   update() {
