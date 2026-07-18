@@ -42,11 +42,11 @@ export class TurnResolver {
   ): ('p1' | 'p2')[] {
     
     // Action type priorities
-    // SWITCH > ITEM > RUN > FIGHT
+    // POKEMON > BAG > RUN > FIGHT
     const actionPriority = {
       RUN: 4,
-      SWITCH: 3,
-      ITEM: 2,
+      POKEMON: 3,
+      BAG: 2,
       FIGHT: 1,
     };
 

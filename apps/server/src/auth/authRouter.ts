@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken';
 import { db } from '../db/connection';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { PokemonInstance } from '../pokemon/PokemonInstance';
+import { addPokemonToUser } from '../db/queries/pokemon';
 
 export const authRouter = Router();
 
@@ -28,6 +30,10 @@ authRouter.post('/register', async (req, res) => {
       username,
       passwordHash
     }).returning();
+
+    // Give them a starter Bulbasaur
+    const starter = await PokemonInstance.generateWild('BULBASAUR', 5, newUser.id);
+    await addPokemonToUser(starter.data.id, newUser.id);
 
     const token = jwt.sign({ userId: newUser.id, username: newUser.username }, JWT_SECRET);
 

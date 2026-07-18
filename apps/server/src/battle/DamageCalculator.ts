@@ -3,6 +3,7 @@ import movesData from '../data/moves.json';
 import pokemonData from '../data/pokemon.json';
 import { PokemonInstance } from '../pokemon/PokemonInstance';
 import { calculateAllStats } from '../pokemon/genetics';
+import type { BattlePokemonSchema } from '@pokemon-realms/shared';
 
 export class DamageCalculator {
   static getEffectiveness(moveType: string, targetTypes: string[]): number {
@@ -30,7 +31,9 @@ export class DamageCalculator {
   static calculateDamage(
     attacker: PokemonInstance,
     defender: PokemonInstance,
-    moveId: string
+    moveId: string,
+    attackerSchema?: BattlePokemonSchema,
+    defenderSchema?: BattlePokemonSchema
   ): { damage: number; isCritical: boolean; effectiveness: number } {
     const move = (movesData as any)[moveId];
     if (!move || move.Category === 'Status' || !move.Power) {
@@ -55,11 +58,28 @@ export class DamageCalculator {
       defender.data.nature
     );
 
-    let atk = move.Category === 'Special' ? attackerStats.spAttack : attackerStats.attack;
-    let def = move.Category === 'Special' ? defenderStats.spDefense : defenderStats.defense;
+    let attackStat = move.Category === 'Physical' ? attackerStats.attack : attackerStats.spAttack;
+    let defenseStat = move.Category === 'Physical' ? defenderStats.defense : defenderStats.spDefense;
+
+    // Apply stat stages (Gen 3 formula: modifier = Math.max(2, 2+stage) / Math.max(2, 2-stage))
+    const getStageMod = (stage: number) => {
+      const num = Math.max(2, 2 + stage);
+      const den = Math.max(2, 2 - stage);
+      return num / den;
+    };
+
+    if (attackerSchema) {
+      if (move.Category === 'Physical') attackStat *= getStageMod(attackerSchema.stageAttack);
+      else attackStat *= getStageMod(attackerSchema.stageSpAttack);
+    }
+    
+    if (defenderSchema) {
+      if (move.Category === 'Physical') defenseStat *= getStageMod(defenderSchema.stageDefense);
+      else defenseStat *= getStageMod(defenderSchema.stageSpDefense);
+    }
 
     // Base damage calculation (Gen 3 formula)
-    let damage = Math.floor(Math.floor(Math.floor(2 * level / 5 + 2) * power * atk / def) / 50) + 2;
+    let damage = Math.floor(Math.floor(Math.floor(2 * level / 5 + 2) * power * attackStat / defenseStat) / 50) + 2;
 
     // Modifiers
     let modifier = 1.0;

@@ -5,7 +5,7 @@ import { PartyPanel } from './PartyPanel';
 import { PCStorage } from './PCStorage';
 import { networkManager } from '../game/network/NetworkManager';
 
-export function HUD() {
+export function HUD({ onLogout }: { onLogout: () => void }) {
   const connected = useGameStore((s) => s.connected);
   const playerId = useGameStore((s) => s.playerId);
   const playerCount = useGameStore((s) => s.playerCount);
@@ -98,6 +98,23 @@ export function HUD() {
         }}
       >
         ACCESS PC
+      </button>
+
+      <button
+        onClick={onLogout}
+        style={{
+          marginTop: 8,
+          background: '#8e44ad',
+          color: '#fff',
+          border: '1px solid #732d91',
+          borderRadius: 4,
+          padding: '4px 8px',
+          cursor: 'pointer',
+          width: '100%',
+          fontWeight: 'bold',
+        }}
+      >
+        LOGOUT
       </button>
 
       <div style={{ marginTop: 16 }}>

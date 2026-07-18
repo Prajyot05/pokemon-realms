@@ -19,7 +19,7 @@ export class EncounterManager {
   static ENCOUNTER_CHANCE = 0.10;
 
   static async rollEncounter(mapId: string, userId: number): Promise<PokemonInstance | null> {
-    if (Math.random() > this.ENCOUNTER_CHANCE) return false;
+    if (Math.random() > this.ENCOUNTER_CHANCE) return null;
 
     const table = encounterTables[mapId] || encounterTables['route-1'];
     

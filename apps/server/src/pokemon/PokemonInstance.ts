@@ -25,7 +25,7 @@ export class PokemonInstance {
     const stats = calculateAllStats(speciesId, level, ivs, evs, nature);
     
     // Pick the first 4 moves available at this level
-    const availableMoves = [];
+    const availableMoves: string[] = [];
     const moveList = species.Moves;
     for (let i = 0; i < moveList.length; i += 2) {
       const moveLevel = moveList[i];
@@ -37,6 +37,29 @@ export class PokemonInstance {
       }
     }
     const startingMoves = availableMoves.slice(-4);
+
+    if (ownerId === -1) {
+      // Wild encounter, do not save to DB yet
+      return new PokemonInstance({
+        id: -1,
+        ownerId: -1,
+        speciesId,
+        nickname: null,
+        level,
+        experience: 0,
+        nature,
+        isShiny,
+        ivs,
+        evs,
+        currentHp: stats.hp,
+        status: null,
+        moves: startingMoves,
+        isParty: false,
+        partyPosition: null,
+        boxNumber: null,
+        boxPosition: null,
+      });
+    }
 
     // Save to DB
     const [inserted] = await db.insert(pokemonInstances).values({

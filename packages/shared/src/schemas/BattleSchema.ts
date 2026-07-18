@@ -8,6 +8,13 @@ export class BattlePokemonSchema extends Schema {
   @type('number') currentHp: number = 1;
   @type('boolean') isShiny: boolean = false;
   @type('string') status: string = ''; // e.g. 'BRN', 'PSN', 'SLP'
+  
+  // Transient battle stats (-6 to +6)
+  @type('number') stageAttack: number = 0;
+  @type('number') stageDefense: number = 0;
+  @type('number') stageSpAttack: number = 0;
+  @type('number') stageSpDefense: number = 0;
+  @type('number') stageSpeed: number = 0;
 }
 
 export class BattlePlayerSchema extends Schema {

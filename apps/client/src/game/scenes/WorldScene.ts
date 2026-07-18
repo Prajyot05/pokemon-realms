@@ -9,6 +9,7 @@ export class WorldScene extends Phaser.Scene {
   private interactKey!: Phaser.Input.Keyboard.Key;
   private playerSprites: Map<string, Phaser.GameObjects.Sprite> = new Map();
   private currentDirection: Direction | null = null;
+  private isBattling: boolean = false;
 
   constructor() {
     super({ key: 'WorldScene' });
@@ -64,8 +65,20 @@ export class WorldScene extends Phaser.Scene {
       const customEvent = e as CustomEvent;
       const roomId = customEvent.detail.roomId;
       
-      this.scene.pause();
-      this.scene.launch('BattleScene', { roomId });
+      this.isBattling = true;
+      this.currentDirection = null; // Stop moving
+      
+      // Classic Pokemon battle transition: Flash screen white
+      this.cameras.main.flash(500, 255, 255, 255, false, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
+        if (progress === 1) {
+          // Launch battle scene as an overlay (WorldScene keeps running in background)
+          this.scene.launch('BattleScene', { roomId });
+        }
+      });
+    });
+    
+    window.addEventListener('BATTLE_ENDED_PHASER', () => {
+      this.isBattling = false;
     });
   }
 
@@ -77,9 +90,9 @@ export class WorldScene extends Phaser.Scene {
     else if (this.cursors.up.isDown) newDirection = 'up';
     else if (this.cursors.down.isDown) newDirection = 'down';
 
-    // Check if dialog is active, block movement if so
+    // Check if dialog or battle is active, block movement if so
     const { activeDialog } = useGameStore.getState();
-    if (activeDialog) {
+    if (activeDialog || this.isBattling) {
       newDirection = null;
     }
 
@@ -207,7 +220,7 @@ export class WorldScene extends Phaser.Scene {
 
     // ── Check Interaction Input ──
     // JustPressed ensures we don't spam the server if the user holds the spacebar down
-    if (Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+    if (!this.isBattling && Phaser.Input.Keyboard.JustDown(this.interactKey)) {
       networkManager.sendInteract();
     }
   }

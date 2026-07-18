@@ -38,6 +38,13 @@ export function App() {
     setIsAuthenticated(true);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('jwt');
+    localStorage.removeItem('username');
+    setIsAuthenticated(false);
+    setUsername('');
+  };
+
   if (!isAuthenticated) {
     return <AuthScreen onLogin={handleLogin} />;
   }
@@ -48,7 +55,7 @@ export function App() {
       <div id="game-container" />
       {/* React UI floats on top */}
       <div id="ui-overlay">
-        <HUD />
+        <HUD onLogout={handleLogout} />
         <DialogBox />
         <BattleUI />
       </div>

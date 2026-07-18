@@ -1,4 +1,4 @@
-import { BattleAction, TurnResult, BattleEvent } from '@pokemon-realms/shared';
+import { BattleAction, TurnResult, BattleEvent, BattlePokemonSchema } from '@pokemon-realms/shared';
 import { PokemonInstance } from '../pokemon/PokemonInstance';
 import { DamageCalculator } from './DamageCalculator';
 import { TurnResolver } from './TurnResolver';
@@ -11,8 +11,8 @@ import { eq } from 'drizzle-orm';
 export class BattleEngine {
   static async resolveTurn(
     turnNumber: number,
-    p1: { id: string; instance: PokemonInstance; action: BattleAction },
-    p2: { id: string; instance: PokemonInstance; action: BattleAction }
+    p1: { id: string; instance: PokemonInstance; action: BattleAction, schema: BattlePokemonSchema },
+    p2: { id: string; instance: PokemonInstance; action: BattleAction, schema: BattlePokemonSchema }
   ): Promise<TurnResult> {
     const events: BattleEvent[] = [];
     
@@ -23,6 +23,7 @@ export class BattleEngine {
     );
 
     const players = { p1, p2 };
+    let battleEndedEarly = false;
 
     // Track faints
     const isFainted = {
@@ -80,7 +81,9 @@ export class BattleEngine {
           const { damage, isCritical, effectiveness } = DamageCalculator.calculateDamage(
             player.instance,
             opponent.instance,
-            moveId
+            moveId,
+            player.schema,
+            opponent.schema
           );
 
           if (effectiveness === 0) {
@@ -112,10 +115,21 @@ export class BattleEngine {
             }
           }
         } else if (move.Category === 'Status') {
-           // Basic status stub for now (M3.2 handles full statuses)
-           events.push({ type: 'TEXT', text: `But it failed!` });
+           // Handle stat modifiers (GROWL, TAIL WHIP, etc)
+           if (move.FunctionCode === 'LowerTargetAttack1') {
+             opponent.schema.stageAttack = Math.max(-6, opponent.schema.stageAttack - 1);
+             events.push({ type: 'TEXT', text: `${opponentName}'s attack fell!` });
+           } else if (move.FunctionCode === 'LowerTargetDefense1') {
+             opponent.schema.stageDefense = Math.max(-6, opponent.schema.stageDefense - 1);
+             events.push({ type: 'TEXT', text: `${opponentName}'s defense fell!` });
+           } else if (move.FunctionCode === 'LowerTargetSpeed1') {
+             opponent.schema.stageSpeed = Math.max(-6, opponent.schema.stageSpeed - 1);
+             events.push({ type: 'TEXT', text: `${opponentName}'s speed fell!` });
+           } else {
+             events.push({ type: 'TEXT', text: `But it failed!` });
+           }
         }
-      } else if (action.type === 'SWITCH') {
+      } else if (action.type === 'POKEMON') {
         const speciesName = player.instance.data.nickname || (pokemonData as any)[player.instance.data.speciesId].Name;
         events.push({
           type: 'TEXT',
@@ -131,18 +145,28 @@ export class BattleEngine {
           type: 'TEXT',
           text: `Got away safely!`
         });
+        battleEndedEarly = true;
+        break; // Stop processing further actions this turn
       }
     }
 
     // Persist HP to DB
-    await Promise.all([
-      db.update(pokemonInstances).set({ currentHp: p1.instance.data.currentHp }).where(eq(pokemonInstances.id, p1.instance.data.id)),
-      db.update(pokemonInstances).set({ currentHp: p2.instance.data.currentHp }).where(eq(pokemonInstances.id, p2.instance.data.id))
-    ]);
+    const updates = [];
+    if (p1.instance.data.id !== -1) {
+      updates.push(db.update(pokemonInstances).set({ currentHp: p1.instance.data.currentHp }).where(eq(pokemonInstances.id, p1.instance.data.id)));
+    }
+    if (p2.instance.data.id !== -1) {
+      updates.push(db.update(pokemonInstances).set({ currentHp: p2.instance.data.currentHp }).where(eq(pokemonInstances.id, p2.instance.data.id)));
+    }
+    
+    if (updates.length > 0) {
+      await Promise.all(updates);
+    }
 
     return {
       turnNumber,
-      events
+      events,
+      isBattleEnded: battleEndedEarly
     };
   }
 }

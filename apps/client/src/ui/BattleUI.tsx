@@ -7,6 +7,7 @@ export function BattleUI() {
   const isBattling = useGameStore((s) => s.isBattling);
   const [text, setText] = useState('');
   const [menu, setMenu] = useState<'MAIN' | 'FIGHT'>('MAIN');
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   useEffect(() => {
     const handleText = (e: Event) => {
@@ -25,6 +26,10 @@ export function BattleUI() {
     };
   }, []);
 
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('BATTLE_FULLSCREEN', { detail: isFullscreen }));
+  }, [isFullscreen]);
+
   if (!isBattling) return null;
 
   const sendAction = (action: Omit<BattleAction, 'playerId'>) => {
@@ -35,21 +40,56 @@ export function BattleUI() {
     setText('Waiting for other player...');
   };
 
+  // Adjust container styles based on fullscreen mode
+  const containerStyle: React.CSSProperties = isFullscreen 
+    ? {
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '600px',
+        height: '400px',
+        pointerEvents: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+        zIndex: 100
+      }
+    : {
+        position: 'absolute',
+        right: '20px',
+        bottom: '20px',
+        width: '600px',
+        height: '400px',
+        pointerEvents: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+        zIndex: 100
+      };
+
   return (
-    <div style={{
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: '150px',
-      background: '#fff',
-      borderTop: '4px solid #000',
-      display: 'flex',
-      padding: '10px',
-      fontFamily: 'monospace',
-      fontSize: '24px',
-      zIndex: 100
-    }}>
+    <div style={containerStyle}>
+      <button 
+        style={{ pointerEvents: 'auto', alignSelf: 'flex-end', marginBottom: '10px', padding: '5px 10px', background: '#333', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+        onClick={() => setIsFullscreen(!isFullscreen)}
+      >
+        {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+      </button>
+
+      <div style={{
+        pointerEvents: 'auto',
+        height: '120px',
+        background: '#fff',
+        border: '4px solid #333',
+        borderRadius: '8px',
+        display: 'flex',
+        padding: '10px',
+        fontFamily: 'monospace',
+        fontSize: '20px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+        marginBottom: '10px'
+      }}>
       <div style={{ flex: 1, borderRight: '4px solid #000', paddingRight: '10px' }}>
         {text || 'What will you do?'}
       </div>
@@ -71,6 +111,7 @@ export function BattleUI() {
           </>
         )}
       </div>
+      </div>
     </div>
   );
 }
@@ -78,7 +119,8 @@ export function BattleUI() {
 const btnStyle = {
   width: '50%',
   height: '50%',
-  fontSize: '24px',
+  fontSize: '20px',
+  fontWeight: 'bold',
   fontFamily: 'monospace',
   cursor: 'pointer',
   background: 'none',

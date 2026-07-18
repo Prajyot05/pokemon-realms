@@ -10,6 +10,7 @@ const SERVER_URL = 'ws://localhost:3001';
 class NetworkManager {
   private client: Client;
   private room: Room<WorldState> | null = null;
+  public battleRoom: Room<BattleState> | null = null;
 
   constructor() {
     this.client = new Client(SERVER_URL);
@@ -68,14 +69,14 @@ class NetworkManager {
     const token = localStorage.getItem('jwt');
     if (!token) throw new Error('No token');
     
-    const battleRoom = await this.client.joinById<BattleState>(roomId, { token });
+    this.battleRoom = await this.client.joinById<BattleState>(roomId, { token });
     
     useGameStore.getState().setBattling(true, roomId);
 
     // Phaser scenes can listen to this event to launch BattleScene
     window.dispatchEvent(new CustomEvent('BATTLE_START_PHASER', { detail: { roomId } }));
 
-    return battleRoom;
+    return this.battleRoom;
   }
 
   sendInteract() {

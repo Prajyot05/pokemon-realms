@@ -3,22 +3,26 @@ import { db } from '../connection';
 import { pokemonInstances } from '../schema';
 
 export async function getUserParty(userId: number) {
-  return await db.select().from(pokemonInstances)
+  const records = await db.select().from(pokemonInstances)
     .where(and(
       eq(pokemonInstances.ownerId, userId),
       eq(pokemonInstances.isParty, true)
     ))
     .orderBy(pokemonInstances.partyPosition);
+    
+  return records.map(mapRecordToInstanceData);
 }
 
 export async function getUserPC(userId: number, boxNumber: number = 0) {
-  return await db.select().from(pokemonInstances)
+  const records = await db.select().from(pokemonInstances)
     .where(and(
       eq(pokemonInstances.ownerId, userId),
       eq(pokemonInstances.isParty, false),
       eq(pokemonInstances.boxNumber, boxNumber)
     ))
     .orderBy(pokemonInstances.boxPosition);
+    
+  return records.map(mapRecordToInstanceData);
 }
 
 export async function addPokemonToUser(instanceId: number, userId: number) {
@@ -55,4 +59,40 @@ export async function addPokemonToUser(instanceId: number, userId: number) {
       .where(eq(pokemonInstances.id, instanceId));
     return 'pc';
   }
+}
+
+function mapRecordToInstanceData(inserted: any) {
+  return {
+    id: inserted.id,
+    ownerId: inserted.ownerId,
+    speciesId: inserted.speciesId,
+    nickname: inserted.nickname,
+    level: inserted.level,
+    experience: inserted.experience,
+    nature: inserted.nature,
+    isShiny: inserted.isShiny,
+    ivs: {
+      hp: inserted.ivHp,
+      attack: inserted.ivAttack,
+      defense: inserted.ivDefense,
+      spAttack: inserted.ivSpAttack,
+      spDefense: inserted.ivSpDefense,
+      speed: inserted.ivSpeed,
+    },
+    evs: {
+      hp: inserted.evHp,
+      attack: inserted.evAttack,
+      defense: inserted.evDefense,
+      spAttack: inserted.evSpAttack,
+      spDefense: inserted.evSpDefense,
+      speed: inserted.evSpeed,
+    },
+    currentHp: inserted.currentHp,
+    status: inserted.status,
+    moves: inserted.moves,
+    isParty: inserted.isParty,
+    partyPosition: inserted.partyPosition,
+    boxNumber: inserted.boxNumber,
+    boxPosition: inserted.boxPosition,
+  };
 }

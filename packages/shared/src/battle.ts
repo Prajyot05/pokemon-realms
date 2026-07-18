@@ -37,4 +37,5 @@ export interface BattleEvent {
 export interface TurnResult {
   turnNumber: number;
   events: BattleEvent[];
+  isBattleEnded?: boolean;
 }
