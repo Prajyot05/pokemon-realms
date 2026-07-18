@@ -26,7 +26,7 @@ export function AuthScreen({ onLogin }: { onLogin: (token: string, username: str
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Authentication failed. Professor Oak is disappointed.');
+        throw new Error(data.error || data.message || 'Authentication failed. Professor Oak is disappointed.');
       }
 
       onLogin(data.token, data.username);
