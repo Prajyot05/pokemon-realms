@@ -119,7 +119,7 @@ export function Pokedex({ onClose }: { onClose: () => void }) {
               <div>
                 <h1 style={{ margin: '0 0 16px 0', fontSize: 32 }}>{selectedPokemon.Name}</h1>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                  {selectedPokemon.Types.map((type: string) => (
+                  {([] as string[]).concat(selectedPokemon.Types || []).map((type: string) => (
                     <span
                       key={type}
                       style={{
@@ -138,12 +138,12 @@ export function Pokedex({ onClose }: { onClose: () => void }) {
                 <div style={{ background: '#fff', padding: 16, borderRadius: 8, border: '2px solid #bdc3c7' }}>
                   <h3 style={{ margin: '0 0 8px 0' }}>Base Stats</h3>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    <div>HP: {selectedPokemon.BaseStats[0]}</div>
-                    <div>ATK: {selectedPokemon.BaseStats[1]}</div>
-                    <div>DEF: {selectedPokemon.BaseStats[2]}</div>
-                    <div>SPD: {selectedPokemon.BaseStats[3]}</div>
-                    <div>SATK: {selectedPokemon.BaseStats[4]}</div>
-                    <div>SDEF: {selectedPokemon.BaseStats[5]}</div>
+                    <div>HP: {selectedPokemon.BaseStats?.[0] ?? '?'}</div>
+                    <div>ATK: {selectedPokemon.BaseStats?.[1] ?? '?'}</div>
+                    <div>DEF: {selectedPokemon.BaseStats?.[2] ?? '?'}</div>
+                    <div>SPD: {selectedPokemon.BaseStats?.[3] ?? '?'}</div>
+                    <div>SATK: {selectedPokemon.BaseStats?.[4] ?? '?'}</div>
+                    <div>SDEF: {selectedPokemon.BaseStats?.[5] ?? '?'}</div>
                   </div>
                 </div>
               </div>
