@@ -7,6 +7,8 @@ import { EncounterManager } from '../encounters/EncounterManager';
 import jwt from 'jsonwebtoken';
 import { getUserParty, getUserPC } from '../db/queries/pokemon';
 import { matchMaker } from 'colyseus';
+import { ChatManager } from '../chat/ChatManager';
+import { SendChatMessage } from '@pokemon-realms/shared';
 
 const VALID_DIRECTIONS = new Set<Direction>(['up', 'down', 'left', 'right']);
 
@@ -15,6 +17,7 @@ export class WorldRoom extends Room<WorldState> {
   private mapId: string = 'pallet-town';
   private playerTiles: Map<string, { x: number, y: number }> = new Map();
   private playersInBattle: Set<string> = new Set();
+  private chatManager: ChatManager = new ChatManager();
 
   async onAuth(client: Client, options: any, request: any) {
     const token = options.token;
@@ -88,6 +91,14 @@ export class WorldRoom extends Room<WorldState> {
       } catch (e) {
         console.error('Failed to fetch PC:', e);
       }
+    });
+
+    this.onMessage('CHAT_MESSAGE', (client: Client, message: SendChatMessage) => {
+      this.chatManager.processMessage(client, this, message);
+    });
+
+    this.onMessage('FETCH_CHAT_HISTORY', (client: Client) => {
+      this.chatManager.sendHistory(client);
     });
 
     this.onMessage(MessageType.INTERACT, (client: Client) => {

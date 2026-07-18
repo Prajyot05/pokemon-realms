@@ -52,10 +52,21 @@ class NetworkManager {
       useGameStore.getState().setDialog(message);
     });
 
+    this.room.onMessage('CHAT_MESSAGE', (message: any) => {
+      useGameStore.getState().addChatMessage(message);
+    });
+
+    this.room.onMessage('CHAT_HISTORY', (messages: any[]) => {
+      useGameStore.getState().addChatMessages(messages);
+    });
+
     this.room.onLeave(() => {
       useGameStore.getState().setConnected(false);
       console.log('🔌 Disconnected from server');
     });
+
+    // Request chat history upon connection
+    this.room.send('FETCH_CHAT_HISTORY');
 
     this.room.onMessage('BATTLE_START', (message: { roomId: string }) => {
       // Lock movement instantly before network connection finishes
@@ -109,6 +120,10 @@ class NetworkManager {
 
   sendStop() {
     this.room?.send('STOP');
+  }
+
+  sendChat(text: string, targetUsername?: string) {
+    this.room?.send('CHAT_MESSAGE', { text, targetUsername });
   }
 
   getSessionId(): string | null {

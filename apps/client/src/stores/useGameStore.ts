@@ -13,6 +13,10 @@ interface GameStore {
   isBattling: boolean;
   battleRoomId: string | null;
   setBattling: (isBattling: boolean, battleRoomId?: string) => void;
+
+  chatMessages: any[];
+  addChatMessage: (msg: any) => void;
+  addChatMessages: (msgs: any[]) => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -31,4 +35,8 @@ export const useGameStore = create<GameStore>((set) => ({
   isBattling: false,
   battleRoomId: null,
   setBattling: (isBattling, battleRoomId) => set({ isBattling, battleRoomId: battleRoomId ?? null }),
+
+  chatMessages: [],
+  addChatMessage: (msg) => set((state) => ({ chatMessages: [...state.chatMessages, msg] })),
+  addChatMessages: (msgs) => set((state) => ({ chatMessages: [...state.chatMessages, ...msgs] })),
 }));

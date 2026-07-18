@@ -41,6 +41,7 @@ export * from './schemas/NPCSchema';
 export * from './schemas/BattleSchema';
 export * from './pokemon/genetics';
 export * from './battle';
+export * from './chat';
 
 /** Movement speed in pixels per tick (server-authoritative) */
 export const MOVE_SPEED = 4;

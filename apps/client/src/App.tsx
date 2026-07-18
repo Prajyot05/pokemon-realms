@@ -5,6 +5,8 @@ import { DialogBox } from './ui/DialogBox';
 import { AuthScreen } from './ui/AuthScreen';
 import { BattleUI } from './ui/BattleUI';
 
+import { ChatPanel } from './ui/ChatPanel';
+
 export function App() {
   const initialized = useRef(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -58,6 +60,7 @@ export function App() {
         <HUD onLogout={handleLogout} />
         <DialogBox />
         <BattleUI />
+        <ChatPanel />
       </div>
     </>
   );
