@@ -19,7 +19,7 @@ export function App() {
       destroyGame();
       initialized.current = false;
     };
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const token = localStorage.getItem('jwt');

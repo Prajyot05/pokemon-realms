@@ -29,14 +29,12 @@ class NetworkManager {
     // Listen for players added (this automatically triggers for existing players too!)
     if (this.room.state.players) {
       this.room.state.players.onAdd((player, sessionId: string) => {
-        console.log(`✅ Player added via onAdd: ${sessionId}`);
         if (this.room?.state.players) {
           useGameStore.getState().setPlayerCount(this.room.state.players.size);
         }
       });
 
       this.room.state.players.onRemove((player, sessionId: string) => {
-        console.log(`👋 Player removed via onRemove: ${sessionId}`);
         if (this.room?.state.players) {
           useGameStore.getState().setPlayerCount(this.room.state.players.size);
         }
@@ -51,11 +49,6 @@ class NetworkManager {
     // Listen for custom messages
     this.room.onMessage(MessageType.DIALOG, (message: { npcId: string; text: string }) => {
       useGameStore.getState().setDialog(message);
-    });
-
-    // Fallback onStateChange
-    this.room.onStateChange((state: any) => {
-      // console.log('🔄 onStateChange fired');
     });
 
     this.room.onLeave(() => {

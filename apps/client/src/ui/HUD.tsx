@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from '../stores/useGameStore';
 import { Pokedex } from './Pokedex';
 import { PartyPanel } from './PartyPanel';

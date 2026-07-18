@@ -579,17 +579,17 @@ Key systems and the engineering concepts behind them:
 ## 6. Milestone Checklist
 
 ### Phase 1: The Living World
-- [x] **M1.0** Multiplayer movement (server-authoritative boxes) ✅
-- [ ] **M1.1** Tiled map integration + server collision detection
-- [ ] **M1.2** Animated player sprites with grid-based tweened movement
-- [ ] **M1.3** Zone transitions + room instancing
-- [ ] **M1.4** NPCs + dialog system
+- [x] **M1.0** Multiplayer movement (server-authoritative boxes)
+- [x] **M1.1** Tiled map integration + server collision detection
+- [x] **M1.2** Animated player sprites with grid-based tweened movement
+- [x] **M1.3** Zone transitions + room instancing
+- [x] **M1.4** NPCs + dialog system
 
 ### Phase 2: Pokémon System
-- [ ] **M2.1** Pokémon species data + type effectiveness matrix
-- [ ] **M2.2** Wild encounters + catch mechanics
-- [ ] **M2.3** Procedural Pokémon genetics (IVs, natures, shinies)
-- [ ] **M2.4** Party management + PC storage (PostgreSQL)
+- [x] **M2.1** Pokémon species data + type effectiveness matrix
+- [x] **M2.2** Wild encounters + catch mechanics
+- [x] **M2.3** Procedural Pokémon genetics (IVs, natures, shinies)
+- [x] **M2.4** Party management + PC storage (PostgreSQL)
 
 ### Phase 3: Battle Engine
 - [ ] **M3.1** Turn-based battle core (state machine + damage formula)
@@ -598,7 +598,7 @@ Key systems and the engineering concepts behind them:
 - [ ] **M3.4** Live battle spectating + replay system
 
 ### Phase 4: Social & Economy
-- [ ] **M4.1** Auth (JWT + bcrypt) + session persistence
+- [x] **M4.1** Auth (JWT + bcrypt) + session persistence
 - [ ] **M4.2** Chat system (zone, proximity, whisper)
 - [ ] **M4.3** Trading system (live + GTS)
 - [ ] **M4.4** Player-run gyms
@@ -621,4 +621,4 @@ Key systems and the engineering concepts behind them:
 
 ## Next Step
 
-Currently at **M1.0 complete**. Next up: **M1.1 — Tiled Map Integration** — replacing the placeholder grid with a real tilemap and adding server-side collision detection. This is the foundation everything else builds on.
+Currently at **Phase 2 complete**. Next up: **Phase 3 — Battle Engine** — replacing the wild encounter instant-catch stub with a fully server-authoritative turn-based battle scene!
