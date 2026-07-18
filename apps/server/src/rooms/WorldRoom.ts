@@ -12,8 +12,9 @@ const VALID_DIRECTIONS = new Set<Direction>(['up', 'down', 'left', 'right']);
 
 export class WorldRoom extends Room<WorldState> {
   private mapCollision!: ReturnType<typeof mapManager.loadMap>;
-  private mapId!: string;
+  private mapId: string = 'pallet-town';
   private playerTiles: Map<string, { x: number, y: number }> = new Map();
+  private playersInBattle: Set<string> = new Set();
 
   async onAuth(client: Client, options: any, request: any) {
     const token = options.token;
@@ -71,6 +72,10 @@ export class WorldRoom extends Room<WorldState> {
       } catch (e) {
         console.error('Failed to fetch party:', e);
       }
+    });
+
+    this.onMessage('BATTLE_ENDED', (client: Client) => {
+      this.playersInBattle.delete(client.sessionId);
     });
 
     this.onMessage('FETCH_PC', async (client: Client, message: { boxNumber?: number }) => {
@@ -203,9 +208,10 @@ export class WorldRoom extends Room<WorldState> {
   }
 
   onLeave(client: Client) {
-    this.state.players.delete(client.sessionId);
+    console.log('👋 Player left:', client.sessionId);
     this.playerTiles.delete(client.sessionId);
-    console.log(`👋 Player left: ${client.sessionId}`);
+    this.playersInBattle.delete(client.sessionId);
+    this.state.players.delete(client.sessionId);
   }
 
   update() {
@@ -235,10 +241,13 @@ export class WorldRoom extends Room<WorldState> {
         const lastTile = this.playerTiles.get(player.id);
         if (lastTile && (lastTile.x !== tileX || lastTile.y !== tileY)) {
           this.playerTiles.set(player.id, { x: tileX, y: tileY });
+          if (this.playersInBattle.has(player.id)) return;
+
           // Only roll on grass (stub: random chance on any walk for now)
           const client = this.clients.find((c) => c.sessionId === player.id);
           const userId = client?.userData?.userId;
           if (userId) {
+            this.playersInBattle.add(player.id);
             EncounterManager.rollEncounter(this.mapId, userId).then(async (wildInstance) => {
               if (wildInstance) {
                 player.isMoving = false;
@@ -253,8 +262,13 @@ export class WorldRoom extends Room<WorldState> {
                 
                 // Tell client to join this specific room
                 client.send('BATTLE_START', { roomId: room.roomId });
+              } else {
+                this.playersInBattle.delete(player.id);
               }
-            }).catch(console.error);
+            }).catch(err => {
+              console.error(err);
+              this.playersInBattle.delete(player.id);
+            });
           }
         }
       }

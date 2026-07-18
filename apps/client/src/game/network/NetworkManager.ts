@@ -89,6 +89,7 @@ class NetworkManager {
       useGameStore.getState().setBattling(false);
       window.dispatchEvent(new CustomEvent('BATTLE_ENDED_PHASER'));
       this.battleRoom = null;
+      this.room?.send('BATTLE_ENDED');
     });
 
     return this.battleRoom;
