@@ -4,6 +4,8 @@ import { MOVE_SPEED, MessageType } from '@pokemon-realms/shared';
 import type { MoveMessage, Direction } from '@pokemon-realms/shared';
 import { mapManager } from '../maps/MapManager';
 import { EncounterManager } from '../encounters/EncounterManager';
+import jwt from 'jsonwebtoken';
+import { getUserParty, getUserPC } from '../db/queries/pokemon';
 
 const VALID_DIRECTIONS = new Set<Direction>(['up', 'down', 'left', 'right']);
 
@@ -11,6 +13,19 @@ export class WorldRoom extends Room<WorldState> {
   private mapCollision!: ReturnType<typeof mapManager.loadMap>;
   private mapId!: string;
   private playerTiles: Map<string, { x: number, y: number }> = new Map();
+
+  async onAuth(client: Client, options: any, request: any) {
+    const token = options.token;
+    if (!token) throw new Error('Missing token');
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super-secret-pokemon-key-for-dev') as any;
+      client.userData = { userId: decoded.userId };
+      return true;
+    } catch (e) {
+      throw new Error('Invalid token');
+    }
+  }
 
   onCreate(options: { mapId: string }) {
     this.mapId = options.mapId || 'pallet-town';
@@ -43,6 +58,29 @@ export class WorldRoom extends Room<WorldState> {
       const player = this.state.players.get(client.sessionId);
       if (player) {
         player.isMoving = false;
+      }
+    });
+
+    this.onMessage('FETCH_PARTY', async (client: Client) => {
+      const userId = client.userData?.userId;
+      if (!userId) return;
+      try {
+        const party = await getUserParty(userId);
+        client.send('PARTY_DATA', party);
+      } catch (e) {
+        console.error('Failed to fetch party:', e);
+      }
+    });
+
+    this.onMessage('FETCH_PC', async (client: Client, message: { boxNumber?: number }) => {
+      const userId = client.userData?.userId;
+      if (!userId) return;
+      try {
+        const boxNumber = message?.boxNumber || 0;
+        const pc = await getUserPC(userId, boxNumber);
+        client.send('PC_DATA', { boxNumber, data: pc });
+      } catch (e) {
+        console.error('Failed to fetch PC:', e);
       }
     });
 
@@ -147,8 +185,16 @@ export class WorldRoom extends Room<WorldState> {
         if (lastTile && (lastTile.x !== tileX || lastTile.y !== tileY)) {
           this.playerTiles.set(player.id, { x: tileX, y: tileY });
           // Only roll on grass (stub: random chance on any walk for now)
-          // Hardcoded userId = 1 for testing Phase 2 storage mechanics
-          EncounterManager.rollEncounter(this.mapId, 1).catch(console.error);
+          const client = this.clients.find((c) => c.sessionId === player.id);
+          const userId = client?.userData?.userId;
+          if (userId) {
+            EncounterManager.rollEncounter(this.mapId, userId).then((caught) => {
+              if (caught) {
+                // If they caught something, tell the client to refresh its party/PC
+                client.send('ENCOUNTER_CAUGHT');
+              }
+            }).catch(console.error);
+          }
         }
       }
     });

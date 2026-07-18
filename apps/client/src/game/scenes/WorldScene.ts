@@ -55,7 +55,8 @@ export class WorldScene extends Phaser.Scene {
     this.interactKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
     // 5. Connect to Server
-    networkManager.connect().catch((err) => {
+    const token = localStorage.getItem('jwt') || undefined;
+    networkManager.connect('pallet-town', token).catch((err) => {
       console.error('Failed to connect to server:', err);
     });
   }

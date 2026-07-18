@@ -15,8 +15,8 @@ class NetworkManager {
     this.client = new Client(SERVER_URL);
   }
 
-  async connect(mapId: string = 'pallet-town'): Promise<Room<WorldState>> {
-    this.room = await this.client.joinOrCreate<WorldState>('zone', { mapId }, WorldState);
+  async connect(mapId: string = 'pallet-town', token?: string): Promise<Room<WorldState>> {
+    this.room = await this.client.joinOrCreate<WorldState>('zone', { mapId, token }, WorldState);
 
     useGameStore.getState().setConnected(true, this.room.sessionId);
     console.log(`🔗 Connected as ${this.room.sessionId}`);

@@ -3,6 +3,7 @@ import { useGameStore } from '../stores/useGameStore';
 import { Pokedex } from './Pokedex';
 import { PartyPanel } from './PartyPanel';
 import { PCStorage } from './PCStorage';
+import { networkManager } from '../game/network/NetworkManager';
 
 export function HUD() {
   const connected = useGameStore((s) => s.connected);
@@ -10,9 +11,33 @@ export function HUD() {
   const playerCount = useGameStore((s) => s.playerCount);
   const [pokedexOpen, setPokedexOpen] = useState(false);
   const [pcOpen, setPcOpen] = useState(false);
-  // TODO: Fetch from server/Colyseus state
   const [party, setParty] = useState([]);
   const [pc, setPc] = useState([]);
+
+  useEffect(() => {
+    if (connected) {
+      const room = networkManager.getRoom();
+      if (!room) return;
+
+      room.onMessage('PARTY_DATA', (data: any) => {
+        setParty(data);
+      });
+
+      room.onMessage('PC_DATA', (data: any) => {
+        setPc(data.data);
+      });
+
+      room.onMessage('ENCOUNTER_CAUGHT', () => {
+        // Refresh party and PC
+        room.send('FETCH_PARTY');
+        room.send('FETCH_PC');
+      });
+
+      // Initial fetch
+      room.send('FETCH_PARTY');
+      room.send('FETCH_PC');
+    }
+  }, [connected]);
 
   return (
     <div
