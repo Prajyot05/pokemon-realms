@@ -6,6 +6,7 @@ import { mapManager } from '../maps/MapManager';
 import { EncounterManager } from '../encounters/EncounterManager';
 import jwt from 'jsonwebtoken';
 import { getUserParty, getUserPC } from '../db/queries/pokemon';
+import { matchMaker } from 'colyseus';
 
 const VALID_DIRECTIONS = new Set<Direction>(['up', 'down', 'left', 'right']);
 
@@ -135,6 +136,56 @@ export class WorldRoom extends Room<WorldState> {
           });
         }
       });
+
+      // Also check if facing a player
+      this.state.players.forEach((otherPlayer, sessionId) => {
+        if (sessionId === client.sessionId) return;
+        
+        let isFacingPlayer = false;
+        const dx = otherPlayer.x - player.x;
+        const dy = otherPlayer.y - player.y;
+
+        const alignThreshold = 24; 
+        const reachThreshold = 48; 
+        
+        switch (player.direction) {
+          case 'up': if (dy < 0 && dy > -reachThreshold && Math.abs(dx) < alignThreshold) isFacingPlayer = true; break;
+          case 'down': if (dy > 0 && dy < reachThreshold && Math.abs(dx) < alignThreshold) isFacingPlayer = true; break;
+          case 'left': if (dx < 0 && dx > -reachThreshold && Math.abs(dy) < alignThreshold) isFacingPlayer = true; break;
+          case 'right': if (dx > 0 && dx < reachThreshold && Math.abs(dy) < alignThreshold) isFacingPlayer = true; break;
+        }
+
+        if (isFacingPlayer) {
+          const otherClient = this.clients.find(c => c.sessionId === sessionId);
+          if (otherClient) {
+            // Send challenge prompt to the other player
+            otherClient.send('CHALLENGE_REQUEST', {
+              fromPlayerId: client.userData.userId,
+              fromUsername: player.id // Using session ID as name fallback for now
+            });
+          }
+        }
+      });
+    });
+
+    this.onMessage('ACCEPT_CHALLENGE', async (client: Client, message: { fromPlayerId: number }) => {
+      const p1Id = client.userData.userId;
+      const p2Id = message.fromPlayerId;
+
+      const p1Client = client;
+      const p2Client = this.clients.find(c => c.userData?.userId === p2Id);
+
+      if (p2Client) {
+        // Create BattleRoom
+        const room = await matchMaker.createRoom('battle', {
+          isPvE: false,
+          p1Id: p1Id.toString(),
+          p2Id: p2Id.toString()
+        });
+
+        p1Client.send('BATTLE_START', { roomId: room.roomId });
+        p2Client.send('BATTLE_START', { roomId: room.roomId });
+      }
     });
 
     console.log(`🌍 Zone created: ${this.mapId}`);
@@ -188,10 +239,20 @@ export class WorldRoom extends Room<WorldState> {
           const client = this.clients.find((c) => c.sessionId === player.id);
           const userId = client?.userData?.userId;
           if (userId) {
-            EncounterManager.rollEncounter(this.mapId, userId).then((caught) => {
-              if (caught) {
-                // If they caught something, tell the client to refresh its party/PC
-                client.send('ENCOUNTER_CAUGHT');
+            EncounterManager.rollEncounter(this.mapId, userId).then(async (wildInstance) => {
+              if (wildInstance) {
+                player.isMoving = false;
+                
+                // Create BattleRoom on server side
+                const room = await matchMaker.createRoom('battle', {
+                  isPvE: true,
+                  p1Id: userId.toString(),
+                  p2Id: 'WILD',
+                  wildInstance: wildInstance
+                });
+                
+                // Tell client to join this specific room
+                client.send('BATTLE_START', { roomId: room.roomId });
               }
             }).catch(console.error);
           }

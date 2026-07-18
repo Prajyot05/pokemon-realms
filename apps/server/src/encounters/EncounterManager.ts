@@ -18,7 +18,7 @@ export class EncounterManager {
   // 10% chance to encounter a pokemon when stepping in grass
   static ENCOUNTER_CHANCE = 0.10;
 
-  static async rollEncounter(mapId: string, userId: number): Promise<boolean> {
+  static async rollEncounter(mapId: string, userId: number): Promise<PokemonInstance | null> {
     if (Math.random() > this.ENCOUNTER_CHANCE) return false;
 
     const table = encounterTables[mapId] || encounterTables['route-1'];
@@ -40,15 +40,13 @@ export class EncounterManager {
     
     console.log(`[Encounter] Player ${userId} found a wild Lv${level} ${selectedEntry.species}!`);
 
-    // For M2.2 Stub, we immediately "catch" it and add it to DB
+    // For Phase 3, we just generate it, no catching yet.
     try {
-      const instance = await PokemonInstance.generateWild(selectedEntry.species, level, userId);
-      const location = await addPokemonToUser(instance.data.id, userId);
-      console.log(`[Encounter] Successfully caught and added to ${location}!`);
-      return true;
+      const instance = await PokemonInstance.generateWild(selectedEntry.species, level, -1);
+      return instance;
     } catch (err) {
       console.error('[Encounter] Failed to generate/catch pokemon:', err);
-      return false;
+      return null;
     }
   }
 }
