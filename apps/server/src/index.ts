@@ -3,9 +3,13 @@ import { WebSocketTransport } from '@colyseus/ws-transport';
 import { monitor } from '@colyseus/monitor';
 import express from 'express';
 import http from 'http';
+import cors from 'cors';
 import { WorldRoom } from './rooms/WorldRoom';
+import { authRouter } from './auth/authRouter';
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 const server = http.createServer(app);
 
 const gameServer = new Server({
@@ -17,6 +21,9 @@ gameServer.define('zone', WorldRoom);
 
 // Colyseus monitor panel (dev only)
 app.use('/colyseus', monitor());
+
+// Auth routes
+app.use('/auth', authRouter);
 
 const PORT = Number(process.env.PORT) || 3001;
 

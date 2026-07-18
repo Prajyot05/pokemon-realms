@@ -10,12 +10,22 @@
   "dependencies": {
     "@colyseus/monitor": "^0.15.0",
     "@colyseus/ws-transport": "^0.15.0",
+    "@pokemon-realms/shared": "*",
+    "bcryptjs": "^3.0.3",
     "colyseus": "^0.15.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
     "express": "^4.21.0",
-    "@pokemon-realms/shared": "*"
+    "jsonwebtoken": "^9.0.3",
+    "postgres": "^3.4.9"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
   }
