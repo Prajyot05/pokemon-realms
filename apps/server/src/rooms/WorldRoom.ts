@@ -3,12 +3,14 @@ import { WorldState, PlayerSchema, NPCSchema } from '@pokemon-realms/shared';
 import { MOVE_SPEED, MessageType } from '@pokemon-realms/shared';
 import type { MoveMessage, Direction } from '@pokemon-realms/shared';
 import { mapManager } from '../maps/MapManager';
+import { EncounterManager } from '../encounters/EncounterManager';
 
 const VALID_DIRECTIONS = new Set<Direction>(['up', 'down', 'left', 'right']);
 
 export class WorldRoom extends Room<WorldState> {
   private mapCollision!: ReturnType<typeof mapManager.loadMap>;
   private mapId!: string;
+  private playerTiles: Map<string, { x: number, y: number }> = new Map();
 
   onCreate(options: { mapId: string }) {
     this.mapId = options.mapId || 'pallet-town';
@@ -107,11 +109,13 @@ export class WorldRoom extends Room<WorldState> {
     player.x = 400;
     player.y = 300;
     this.state.players.set(client.sessionId, player);
+    this.playerTiles.set(client.sessionId, { x: Math.floor(400/32), y: Math.floor(300/32) });
     console.log(`✅ Player joined: ${client.sessionId}`);
   }
 
   onLeave(client: Client) {
     this.state.players.delete(client.sessionId);
+    this.playerTiles.delete(client.sessionId);
     console.log(`👋 Player left: ${client.sessionId}`);
   }
 
@@ -137,6 +141,15 @@ export class WorldRoom extends Room<WorldState> {
       if (this.mapCollision.isWalkable(tileX, tileY)) {
         player.x = nextX;
         player.y = nextY;
+        
+        // Encounter stub logic
+        const lastTile = this.playerTiles.get(player.id);
+        if (lastTile && (lastTile.x !== tileX || lastTile.y !== tileY)) {
+          this.playerTiles.set(player.id, { x: tileX, y: tileY });
+          // Only roll on grass (stub: random chance on any walk for now)
+          // Hardcoded userId = 1 for testing Phase 2 storage mechanics
+          EncounterManager.rollEncounter(this.mapId, 1).catch(console.error);
+        }
       }
     });
   }
