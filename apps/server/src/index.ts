@@ -6,6 +6,7 @@ import http from 'http';
 import cors from 'cors';
 import { WorldRoom } from './rooms/WorldRoom';
 import { BattleRoom } from './rooms/BattleRoom';
+import { TradeRoom } from './rooms/TradeRoom';
 import { authRouter } from './auth/authRouter';
 
 const app = express();
@@ -20,6 +21,7 @@ const gameServer = new Server({
 // Register rooms
 gameServer.define('zone', WorldRoom);
 gameServer.define('battle', BattleRoom);
+gameServer.define('trade', TradeRoom);
 
 // Colyseus monitor panel (dev only)
 app.use('/colyseus', monitor());

@@ -39,9 +39,11 @@ export const MessageType = {
 export * from './schemas/PlayerSchema';
 export * from './schemas/NPCSchema';
 export * from './schemas/BattleSchema';
+export * from './schemas/TradeSchema';
 export * from './pokemon/genetics';
 export * from './battle';
 export * from './chat';
+export * from './trade';
 
 /** Movement speed in pixels per tick (server-authoritative) */
 export const MOVE_SPEED = 4;

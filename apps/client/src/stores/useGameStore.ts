@@ -17,6 +17,12 @@ interface GameStore {
   chatMessages: any[];
   addChatMessage: (msg: any) => void;
   addChatMessages: (msgs: any[]) => void;
+
+  isTrading: boolean;
+  tradeRoomId: string | null;
+  tradeRequest: { fromUsername: string; fromPlayerId: number } | null;
+  setTrading: (isTrading: boolean, tradeRoomId?: string) => void;
+  setTradeRequest: (req: { fromUsername: string; fromPlayerId: number } | null) => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -39,4 +45,10 @@ export const useGameStore = create<GameStore>((set) => ({
   chatMessages: [],
   addChatMessage: (msg) => set((state) => ({ chatMessages: [...state.chatMessages, msg] })),
   addChatMessages: (msgs) => set((state) => ({ chatMessages: [...state.chatMessages, ...msgs] })),
+
+  isTrading: false,
+  tradeRoomId: null,
+  tradeRequest: null,
+  setTrading: (isTrading, tradeRoomId) => set({ isTrading, tradeRoomId: tradeRoomId ?? null }),
+  setTradeRequest: (req) => set({ tradeRequest: req }),
 }));

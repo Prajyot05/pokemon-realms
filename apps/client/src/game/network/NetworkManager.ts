@@ -3,7 +3,7 @@ import { useGameStore } from '../../stores/useGameStore';
 import { MessageType } from '@pokemon-realms/shared';
 import type { Direction } from '@pokemon-realms/shared';
 
-import { WorldState, BattleState } from '@pokemon-realms/shared';
+import { WorldState, BattleState, TradeState, TradeOffer } from '@pokemon-realms/shared';
 
 const SERVER_URL = 'ws://localhost:3001';
 
@@ -11,6 +11,7 @@ class NetworkManager {
   private client: Client;
   private room: Room<WorldState> | null = null;
   public battleRoom: Room<BattleState> | null = null;
+  public tradeRoom: Room<TradeState> | null = null;
 
   constructor() {
     this.client = new Client(SERVER_URL);
@@ -58,6 +59,19 @@ class NetworkManager {
 
     this.room.onMessage('CHAT_HISTORY', (messages: any[]) => {
       useGameStore.getState().addChatMessages(messages);
+    });
+
+    this.room.onMessage('TRADE_REQUEST', (message: { fromUsername: string; fromPlayerId: number }) => {
+      useGameStore.getState().setTradeRequest(message);
+    });
+
+    this.room.onMessage('TRADE_START', (message: { roomId: string }) => {
+      window.dispatchEvent(new CustomEvent('BATTLE_ENCOUNTER_START')); // Lock movement
+      this.connectTrade(message.roomId).catch(err => {
+        console.error('Failed to connect to trade room:', err);
+        useGameStore.getState().setTrading(false);
+        window.dispatchEvent(new CustomEvent('BATTLE_ENDED_PHASER')); // unlock world
+      });
     });
 
     this.room.onLeave(() => {
@@ -110,6 +124,38 @@ class NetworkManager {
     return this.battleRoom;
   }
 
+  async connectTrade(roomId: string): Promise<Room<TradeState>> {
+    const token = localStorage.getItem('jwt');
+    if (!token) throw new Error('No token');
+    
+    this.tradeRoom = await this.client.joinById<TradeState>(roomId, { token });
+    useGameStore.getState().setTrading(true, roomId);
+
+    this.tradeRoom.onMessage('TRADE_COMPLETED', () => {
+      // Handled by state changes, but can trigger effects here
+      setTimeout(() => {
+        useGameStore.getState().setTrading(false);
+        window.dispatchEvent(new CustomEvent('BATTLE_ENDED_PHASER'));
+      }, 3000);
+    });
+
+    this.tradeRoom.onMessage('TRADE_CANCELLED', (data: any) => {
+      console.log('Trade cancelled:', data.reason);
+      setTimeout(() => {
+        useGameStore.getState().setTrading(false);
+        window.dispatchEvent(new CustomEvent('BATTLE_ENDED_PHASER'));
+      }, 1000);
+    });
+
+    this.tradeRoom.onLeave(() => {
+      useGameStore.getState().setTrading(false);
+      window.dispatchEvent(new CustomEvent('BATTLE_ENDED_PHASER'));
+      this.tradeRoom = null;
+    });
+
+    return this.tradeRoom;
+  }
+
   sendInteract() {
     this.room?.send(MessageType.INTERACT);
   }
@@ -124,6 +170,31 @@ class NetworkManager {
 
   sendChat(text: string, targetUsername?: string) {
     this.room?.send('CHAT_MESSAGE', { text, targetUsername });
+  }
+
+  acceptTrade(fromPlayerId: number) {
+    this.room?.send('ACCEPT_TRADE', { fromPlayerId });
+    useGameStore.getState().setTradeRequest(null);
+  }
+
+  rejectTrade() {
+    useGameStore.getState().setTradeRequest(null);
+  }
+
+  sendTradeOffer(pokemonId: number | null) {
+    this.tradeRoom?.send('TRADE_OFFER', { pokemonId });
+  }
+
+  sendTradeReady(ready: boolean) {
+    this.tradeRoom?.send('TRADE_READY', { ready });
+  }
+
+  sendTradeConfirm() {
+    this.tradeRoom?.send('TRADE_CONFIRM');
+  }
+
+  sendTradeCancel() {
+    this.tradeRoom?.send('TRADE_CANCEL');
   }
 
   getSessionId(): string | null {

@@ -6,6 +6,7 @@ import { AuthScreen } from './ui/AuthScreen';
 import { BattleUI } from './ui/BattleUI';
 
 import { ChatPanel } from './ui/ChatPanel';
+import { TradeWindow, TradeRequestOverlay } from './ui/TradeWindow';
 
 export function App() {
   const initialized = useRef(false);
@@ -60,6 +61,8 @@ export function App() {
         <HUD onLogout={handleLogout} />
         <DialogBox />
         <BattleUI />
+        <TradeWindow />
+        <TradeRequestOverlay />
         <ChatPanel />
       </div>
     </>
