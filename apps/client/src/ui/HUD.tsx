@@ -1,9 +1,18 @@
+import { useState } from 'react';
 import { useGameStore } from '../stores/useGameStore';
+import { Pokedex } from './Pokedex';
+import { PartyPanel } from './PartyPanel';
+import { PCStorage } from './PCStorage';
 
 export function HUD() {
   const connected = useGameStore((s) => s.connected);
   const playerId = useGameStore((s) => s.playerId);
   const playerCount = useGameStore((s) => s.playerCount);
+  const [pokedexOpen, setPokedexOpen] = useState(false);
+  const [pcOpen, setPcOpen] = useState(false);
+  // TODO: Fetch from server/Colyseus state
+  const [party, setParty] = useState([]);
+  const [pc, setPc] = useState([]);
 
   return (
     <div
@@ -32,6 +41,46 @@ export function HUD() {
       <div style={{ marginTop: 6, opacity: 0.5, fontSize: 11 }}>
         Arrow keys to move
       </div>
+      <button
+        onClick={() => setPokedexOpen(true)}
+        style={{
+          marginTop: 12,
+          background: '#e74c3c',
+          color: '#fff',
+          border: '1px solid #c0392b',
+          borderRadius: 4,
+          padding: '4px 8px',
+          cursor: 'pointer',
+          width: '100%',
+          fontWeight: 'bold',
+        }}
+      >
+        OPEN POKéDEX
+      </button>
+
+      <button
+        onClick={() => setPcOpen(true)}
+        style={{
+          marginTop: 8,
+          background: '#34495e',
+          color: '#fff',
+          border: '1px solid #2c3e50',
+          borderRadius: 4,
+          padding: '4px 8px',
+          cursor: 'pointer',
+          width: '100%',
+          fontWeight: 'bold',
+        }}
+      >
+        ACCESS PC
+      </button>
+
+      <div style={{ marginTop: 16 }}>
+        <PartyPanel party={party} />
+      </div>
+
+      {pokedexOpen && <Pokedex onClose={() => setPokedexOpen(false)} />}
+      {pcOpen && <PCStorage pc={pc} onClose={() => setPcOpen(false)} />}
     </div>
   );
 }
